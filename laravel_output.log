@@ -1,0 +1,437 @@
+
+                                        
+  The "--force" option does not exist.  
+                                        
+
+Syncing with Jira
+JiraRestApi\Issue\Issue {#648
+  +expand: "operations,versionedRepresentations,editmeta,changelog,renderedFields"
+  +self: "https://jira.alm.mentorg.com/rest/api/2/issue/243582"
+  +id: "243582"
+  +key: "SIEJTEST-2"
+  +fields: JiraRestApi\Issue\IssueField {#656
+    +summary: "This is a Test SR for our test integration system"
+    +progress: null
+    +timeTracking: null
+    +issuetype: JiraRestApi\Issue\IssueType {#659
+      +self: null
+      +id: null
+      +description: null
+      +iconUrl: null
+      +name: null
+      +subtask: null
+      +statuses: null
+    }
+    +reporter: null
+    +created: null
+    +updated: null
+    +description: null
+    +priority: null
+    +status: null
+    +labels: null
+    +project: JiraRestApi\Project\Project {#657
+      +expand: null
+      +self: null
+      +id: null
+      +key: null
+      +name: null
+      +avatarUrls: null
+      +projectCategory: null
+      +description: null
+      +lead: null
+      +components: null
+      +issueTypes: null
+      +assigneeType: null
+      +versions: null
+      +roles: null
+      +url: null
+      +projectTypeKey: null
+      +projectTemplateKey: null
+      +avatarId: null
+      +issueSecurityScheme: null
+      +permissionScheme: null
+      +notificationScheme: null
+      +categoryId: null
+    }
+    +environment: null
+    +components: null
+    +comment: null
+    +votes: null
+    +resolution: null
+    +fixVersions: null
+    +creator: null
+    +watches: null
+    +worklog: null
+    +assignee: JiraRestApi\Issue\Reporter {#658
+      +self: null
+      +name: null
+      +emailAddress: null
+      +avatarUrls: null
+      +displayName: null
+      +active: null
+      -wantUnassigned: false
+      +accountId: null
+    }
+    +versions: null
+    +attachment: null
+    +aggregatetimespent: null
+    +timeestimate: null
+    +aggregatetimeoriginalestimate: null
+    +resolutiondate: null
+    +duedate: null
+    +issuelinks: null
+    +subtasks: null
+    +workratio: null
+    +aggregatetimeestimate: null
+    +aggregateprogress: null
+    +lastViewed: null
+    +timeoriginalestimate: null
+    +parent: null
+    +customFields: array:2 [
+      "customfield_15040" => {#631
+        +"self": "https://jira.alm.mentorg.com/rest/api/2/customFieldOption/14836"
+        +"value": "No"
+        +"id": "14836"
+      }
+      "customfield_16541" => "2020-02-06T20:53:00.000+0000"
+    ]
+    +security: null
+    +"customfield_15040": {#631}
+    +"customfield_16541": "2020-02-06T20:53:00.000+0000"
+  }
+  +renderedFields: null
+  +names: null
+  +schema: null
+  +transitions: null
+  +operations: null
+  +editmeta: null
+  +changelog: null
+}
+SIEJTEST-2
+This is a Test SR for our test integration system
+
+2020-02-06T20:53:00.000+0000
+Syncing with Jira
+JiraRestApi\Issue\Issue {#648
+  +expand: "operations,versionedRepresentations,editmeta,changelog,renderedFields"
+  +self: "https://jira.alm.mentorg.com/rest/api/2/issue/243582"
+  +id: "243582"
+  +key: "SIEJTEST-2"
+  +fields: JiraRestApi\Issue\IssueField {#656
+    +summary: "This is a Test SR for our test integration system"
+    +progress: null
+    +timeTracking: null
+    +issuetype: JiraRestApi\Issue\IssueType {#659
+      +self: null
+      +id: null
+      +description: null
+      +iconUrl: null
+      +name: null
+      +subtask: null
+      +statuses: null
+    }
+    +reporter: null
+    +created: null
+    +updated: null
+    +description: null
+    +priority: null
+    +status: null
+    +labels: null
+    +project: JiraRestApi\Project\Project {#657
+      +expand: null
+      +self: null
+      +id: null
+      +key: null
+      +name: null
+      +avatarUrls: null
+      +projectCategory: null
+      +description: null
+      +lead: null
+      +components: null
+      +issueTypes: null
+      +assigneeType: null
+      +versions: null
+      +roles: null
+      +url: null
+      +projectTypeKey: null
+      +projectTemplateKey: null
+      +avatarId: null
+      +issueSecurityScheme: null
+      +permissionScheme: null
+      +notificationScheme: null
+      +categoryId: null
+    }
+    +environment: null
+    +components: null
+    +comment: null
+    +votes: null
+    +resolution: null
+    +fixVersions: null
+    +creator: null
+    +watches: null
+    +worklog: null
+    +assignee: JiraRestApi\Issue\Reporter {#658
+      +self: null
+      +name: null
+      +emailAddress: null
+      +avatarUrls: null
+      +displayName: null
+      +active: null
+      -wantUnassigned: false
+      +accountId: null
+    }
+    +versions: null
+    +attachment: null
+    +aggregatetimespent: null
+    +timeestimate: null
+    +aggregatetimeoriginalestimate: null
+    +resolutiondate: null
+    +duedate: null
+    +issuelinks: null
+    +subtasks: null
+    +workratio: null
+    +aggregatetimeestimate: null
+    +aggregateprogress: null
+    +lastViewed: null
+    +timeoriginalestimate: null
+    +parent: null
+    +customFields: array:2 [
+      "customfield_15040" => {#631
+        +"self": "https://jira.alm.mentorg.com/rest/api/2/customFieldOption/14836"
+        +"value": "No"
+        +"id": "14836"
+      }
+      "customfield_16541" => "2020-02-06T20:53:00.000+0000"
+    ]
+    +security: null
+    +"customfield_15040": {#631}
+    +"customfield_16541": "2020-02-06T20:53:00.000+0000"
+  }
+  +renderedFields: null
+  +names: null
+  +schema: null
+  +transitions: null
+  +operations: null
+  +editmeta: null
+  +changelog: null
+}
+SIEJTEST-2
+This is a Test SR for our test integration system
+
+2020-02-06T20:53:00.000+0000
+Syncing with Jira
+JiraRestApi\Issue\Issue {#648
+  +expand: "operations,versionedRepresentations,editmeta,changelog,renderedFields"
+  +self: "https://jira.alm.mentorg.com/rest/api/2/issue/243582"
+  +id: "243582"
+  +key: "SIEJTEST-2"
+  +fields: JiraRestApi\Issue\IssueField {#656
+    +summary: "This is a Test SR for our test integration system"
+    +progress: null
+    +timeTracking: null
+    +issuetype: JiraRestApi\Issue\IssueType {#659
+      +self: null
+      +id: null
+      +description: null
+      +iconUrl: null
+      +name: null
+      +subtask: null
+      +statuses: null
+    }
+    +reporter: null
+    +created: null
+    +updated: null
+    +description: null
+    +priority: null
+    +status: null
+    +labels: null
+    +project: JiraRestApi\Project\Project {#657
+      +expand: null
+      +self: null
+      +id: null
+      +key: null
+      +name: null
+      +avatarUrls: null
+      +projectCategory: null
+      +description: null
+      +lead: null
+      +components: null
+      +issueTypes: null
+      +assigneeType: null
+      +versions: null
+      +roles: null
+      +url: null
+      +projectTypeKey: null
+      +projectTemplateKey: null
+      +avatarId: null
+      +issueSecurityScheme: null
+      +permissionScheme: null
+      +notificationScheme: null
+      +categoryId: null
+    }
+    +environment: null
+    +components: null
+    +comment: null
+    +votes: null
+    +resolution: null
+    +fixVersions: null
+    +creator: null
+    +watches: null
+    +worklog: null
+    +assignee: JiraRestApi\Issue\Reporter {#658
+      +self: null
+      +name: null
+      +emailAddress: null
+      +avatarUrls: null
+      +displayName: null
+      +active: null
+      -wantUnassigned: false
+      +accountId: null
+    }
+    +versions: null
+    +attachment: null
+    +aggregatetimespent: null
+    +timeestimate: null
+    +aggregatetimeoriginalestimate: null
+    +resolutiondate: null
+    +duedate: null
+    +issuelinks: null
+    +subtasks: null
+    +workratio: null
+    +aggregatetimeestimate: null
+    +aggregateprogress: null
+    +lastViewed: null
+    +timeoriginalestimate: null
+    +parent: null
+    +customFields: array:2 [
+      "customfield_15040" => {#631
+        +"self": "https://jira.alm.mentorg.com/rest/api/2/customFieldOption/14836"
+        +"value": "No"
+        +"id": "14836"
+      }
+      "customfield_16541" => "2020-02-06T20:53:00.000+0000"
+    ]
+    +security: null
+    +"customfield_15040": {#631}
+    +"customfield_16541": "2020-02-06T20:53:00.000+0000"
+  }
+  +renderedFields: null
+  +names: null
+  +schema: null
+  +transitions: null
+  +operations: null
+  +editmeta: null
+  +changelog: null
+}
+SIEJTEST-2
+This is a Test SR for our test integration system
+
+2020-02-06T20:53:00.000+0000
+Syncing with Jira
+JiraRestApi\Issue\Issue {#648
+  +expand: "operations,versionedRepresentations,editmeta,changelog,renderedFields"
+  +self: "https://jira.alm.mentorg.com/rest/api/2/issue/243582"
+  +id: "243582"
+  +key: "SIEJTEST-2"
+  +fields: JiraRestApi\Issue\IssueField {#656
+    +summary: "This is a Test SR for our test integration system"
+    +progress: null
+    +timeTracking: null
+    +issuetype: JiraRestApi\Issue\IssueType {#659
+      +self: null
+      +id: null
+      +description: null
+      +iconUrl: null
+      +name: null
+      +subtask: null
+      +statuses: null
+    }
+    +reporter: null
+    +created: null
+    +updated: null
+    +description: null
+    +priority: null
+    +status: null
+    +labels: null
+    +project: JiraRestApi\Project\Project {#657
+      +expand: null
+      +self: null
+      +id: null
+      +key: null
+      +name: null
+      +avatarUrls: null
+      +projectCategory: null
+      +description: null
+      +lead: null
+      +components: null
+      +issueTypes: null
+      +assigneeType: null
+      +versions: null
+      +roles: null
+      +url: null
+      +projectTypeKey: null
+      +projectTemplateKey: null
+      +avatarId: null
+      +issueSecurityScheme: null
+      +permissionScheme: null
+      +notificationScheme: null
+      +categoryId: null
+    }
+    +environment: null
+    +components: null
+    +comment: null
+    +votes: null
+    +resolution: null
+    +fixVersions: null
+    +creator: null
+    +watches: null
+    +worklog: null
+    +assignee: JiraRestApi\Issue\Reporter {#658
+      +self: null
+      +name: null
+      +emailAddress: null
+      +avatarUrls: null
+      +displayName: null
+      +active: null
+      -wantUnassigned: false
+      +accountId: null
+    }
+    +versions: null
+    +attachment: null
+    +aggregatetimespent: null
+    +timeestimate: null
+    +aggregatetimeoriginalestimate: null
+    +resolutiondate: null
+    +duedate: null
+    +issuelinks: null
+    +subtasks: null
+    +workratio: null
+    +aggregatetimeestimate: null
+    +aggregateprogress: null
+    +lastViewed: null
+    +timeoriginalestimate: null
+    +parent: null
+    +customFields: array:2 [
+      "customfield_15040" => {#631
+        +"self": "https://jira.alm.mentorg.com/rest/api/2/customFieldOption/14836"
+        +"value": "No"
+        +"id": "14836"
+      }
+      "customfield_16541" => "2020-02-06T20:53:00.000+0000"
+    ]
+    +security: null
+    +"customfield_15040": {#631}
+    +"customfield_16541": "2020-02-06T20:53:00.000+0000"
+  }
+  +renderedFields: null
+  +names: null
+  +schema: null
+  +transitions: null
+  +operations: null
+  +editmeta: null
+  +changelog: null
+}
+SIEJTEST-2
+This is a Test SR for our test integration system
+
+2020-02-06T20:53:00.000+0000
