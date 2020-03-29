@@ -8,6 +8,7 @@ use JiraRestApi\Issue\IssueField;
 use JiraRestApi\JiraException;
 use App\JiraTicket;
 use App\Google;
+use App\Database;
 
 class SyncJira extends Command
 {
@@ -20,7 +21,8 @@ class SyncJira extends Command
 	private $sla= ['critical'=>[2,1],
 				 'high'=>[10,5],
 				 'medium'=>[20,10],
-				 'low'=>[40,20]];
+				 'low'=>[40,20],
+				 ''=>[40,20]];
 	private $hours_day=8;
 	private $customfields=[];
     protected $signature = 'sync:jira';
@@ -46,6 +48,11 @@ class SyncJira extends Command
 	{
 		if(isset($this->customfields[$prop]))
 			return $this->customfields[$prop];
+	}
+	public function UpdateDb($ticket)
+	{
+		echo $ticket->key."\n";
+		$this->db->SaveTicket($ticket);
 	}
 	public function UpdateTicketInJira($ticket)
 	{
@@ -99,7 +106,7 @@ class SyncJira extends Command
 			];
 			$issueService = new IssueService();
 			echo "Updating ".$ticket->key."\n";
-			$ret = $issueService->update($ticket->key, $ticket->issueField,$editParams);
+			//$ret = $issueService->update($ticket->key, $ticket->issueField,$editParams);
 		}
 	}
 	public function UpdateTimeToResolution($ticket)
@@ -111,6 +118,7 @@ class SyncJira extends Command
 			echo "Resolution Date=".$ticket->resolutiondate->format('Y-m-d\TH:i:s.u')."\n";
 			
 			$ticket->net_minutes_to_resolution = $this->get_working_minutes($ticket->first_contact_date->format('Y-m-d\TH:i:s.u'),$ticket->resolutiondate->format('Y-m-d\TH:i:s.u'));
+			//echo "Net minutes to res=$ticket->net_minutes_to_resolution \n";
 			$difference = $ticket->first_contact_date->diff($ticket->resolutiondate);
 		}
 		else if(($ticket->resolutiondate == null)&&($ticket->first_contact_date != null))
@@ -125,8 +133,10 @@ class SyncJira extends Command
 			$ticket->net_minutes_to_resolution = $this->get_working_minutes($ticket->first_contact_date->format('Y-m-d\TH:i:s.u'),$now->format('Y-m-d\TH:i:s.u'));
 			
 		}
-		$ticket->net_minutes_to_resolution = $ticket->net_minutes_to_resolution - $ticket->waithours ;
-		//echo "Net minutes=$ticket->net_minutes_to_resolution\n";
+		echo "Net minutes=$ticket->net_minutes_to_resolution\n";
+		echo "waitminutes=$ticket->waitminutes\n";
+		$ticket->net_minutes_to_resolution = $ticket->net_minutes_to_resolution - $ticket->waitminutes ;
+		echo "Net minutes=$ticket->net_minutes_to_resolution\n";
 		
 		$ticket->net_time_to_resolution  = $this->seconds2human($ticket->net_minutes_to_resolution*60);	
 		//echo "Net time=$ticket->net_time_to_resolution\n";
@@ -140,7 +150,7 @@ class SyncJira extends Command
 		$ticket->gross_time_to_resolution=$difference->days." days,".$difference->h." hours,".$difference->i." minutes";
 
 
-		//echo "Gross minutes=$ticket->gross_minutes_to_resolution\n";
+		echo "Gross minutes=$ticket->gross_minutes_to_resolution\n";
 		//echo "days = ". $difference->days."\n";
 		//echo "hours = ". $difference->h."\n";
 		//echo "minutes = ". $difference->i."\n";
@@ -209,6 +219,10 @@ class SyncJira extends Command
 		foreach($ticket->transitions as $transition)
 		{
 			//dump($transition);
+			
+			if($ticket->first_contact_date->format('U') >  $transition->created->format('U') )
+				 $transition->created = $ticket->first_contact_date;
+			
 			if(($transition->toString == "Waiting Customer Feedback")||($transition->toString == "Queued"))
 			{
 				if(($transition->fromString == "Waiting Customer Feedback")||($transition->fromString == "Queued"))
@@ -220,7 +234,8 @@ class SyncJira extends Command
 					$interval = new \StdClass();
 					$interval->start = $transition->created;
 					$interval->end  = $ticket->GetCurrentDateTime();
-					$interval->waiting_hours = $this->get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
+					
+					$interval->waiting_minutes = $this->get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
 					continue;
 				}
 			}
@@ -229,9 +244,9 @@ class SyncJira extends Command
 				if($interval != null)
 				{
 					$interval->end = $transition->created;
-					$interval->waiting_hours = $this->get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
+					$interval->waiting_minutes = $this->get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
 					$interval->type="customer wait";
-					//if($interval->waiting_hours>0)
+					//if($interval->waiting_minutes>0)
 					$intervals[] = $interval;
 					
 					$interval = null;
@@ -241,7 +256,7 @@ class SyncJira extends Command
 			{
 				$interval = new \StdClass();
 				$interval->start = $transition->created;
-				$interval->waiting_hours = 0;
+				$interval->waiting_minutes = 0;
 				//echo "Interval Created\n";
 				
 			}
@@ -249,23 +264,26 @@ class SyncJira extends Command
 			if(($transition->fromString=="Resolved")  && ($transition->toString == "Reopened"))
 			{
 				$interval->end = $transition->created;
-				$interval->waiting_hours = $this->get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
-				//if($interval->waiting_hours>0)
+				$interval->waiting_minutes = $this->get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
+				//if($interval->waiting_minutes>0)
 				$interval->type="Reopen";
 				$intervals[] = $interval;
 				$interval = null;
 			}
 		}
-		if($interval != null && $interval->waiting_hours>0)
+		if($interval != null && $interval->waiting_minutes>0)
 			$intervals[] = $interval;
 		
-		$waiting_hours = 0;
-		
+		$waiting_minutes = 0;
+
 		foreach($intervals as $interval)
 		{
-			$waiting_hours  += $interval->waiting_hours;
+			if($interval->waiting_minutes <=0 )
+				continue;
+			
+			$waiting_minutes  += $interval->waiting_minutes;
 		}
-		return $waiting_hours;
+		return $waiting_minutes;
 	}
 	public function ProcessActiveTickets($issue)
 	{
@@ -274,11 +292,10 @@ class SyncJira extends Command
 		echo "--------------------------------------------"."\n";
 		echo "Key=$ticket->key\n";
 		echo $ticket->status."\n";
-		$ticket->waithours=$this->ComputeWaitingTime($ticket);
+		$ticket->waitminutes=$this->ComputeWaitingTime($ticket);
 		echo "Status=$ticket->status\n";
 		echo "_Status=$ticket->_status\n";
-		echo "Wait Hours = $ticket->waithours\n";
-		
+		echo "Wait Minutes = $ticket->waitminutes\n";
 		
 		//echo $ticket->priority."\n";
 		//echo "service_level=$ticket->service_level\n";
@@ -301,18 +318,22 @@ class SyncJira extends Command
 		$this->UpdateTimeToResolution($ticket);	
 		$this->SendNotification($ticket);		
 		$this->UpdateTicketInJira($ticket);
+		$this->UpdateDb($ticket);
 		
 	}
 	public function PullActiveTickets()
 	{
 		$issueService = new IssueService();
-		$last_updated = getenv("LAST_UPDATED");
+
+		$last_updated = $this->db->Get('last_updated');
+		
+		//$last_updated = getenv("LAST_UPDATED");
 		$jql = 'project=SIEJIR_TEST  and  "First Contact Date" is not null  and (cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
 		//$jql = 'project=SIEJIR_TEST  and  "First Contact Date" is not null  and  statusCategory  != Done)';
 		//$jql = 'project=SIEJIR_TEST';
-		if($last_updated !='')
-			$jql .= ' and  updated > "'.$last_updated.'"';
-		
+		if(($last_updated !='')&&($last_updated !=null))
+			$jql = 'project=SIEJIR_TEST and updated > "'.$last_updated.'"';
+	
 		echo "Query for active tickets \n".$jql."\n";
 		$last_updated=new \DateTime();
 		$last_updated = $last_updated->format('Y-m-d H:i');
@@ -323,10 +344,39 @@ class SyncJira extends Command
 		{
 			$this->ProcessActiveTickets($issue);
 		}
-		putenv("LAST_UPDATED=$last_updated");
-		echo getenv("LAST_UPDATED");
+		$this->db->Save(compact('last_updated'));
+		
+		//echo "--------------->".$this->db->Get('last_updated')."\n";
+		
+		//putenv("LAST_UPDATED=$last_updated\n");
+		//echo getenv("LAST_UPDATED");
 		echo "System updated till ".$last_updated."\n"; 
 		
+	}
+	function CheckWhenToUpdate()
+	{
+		$last_updated = $this->db->Get('last_updated');
+		$force_update = $this->db->Get('force_update');
+		if($force_update == 1)
+		{
+			$force_update=0;
+			$this->db->Save(compact('force_update'));
+			return true;
+		}
+		
+		if(($last_updated !='')&&($last_updated !=null))
+		{
+			$dt1 =new \DateTime($last_updated);
+			$now =  new \DateTime();
+			$difference = $now->diff($dt1);
+			$minutes = $difference->days * 24 * 60;
+			$minutes += $difference->h * 60;
+			$minutes += $difference->i;
+			if($minutes>30)
+				return true;
+			return false;
+		}
+		return true;
 	}
     /**
      * Execute the console command.
@@ -335,12 +385,21 @@ class SyncJira extends Command
      */
     public function handle()
     {
+		$this->db = new Database();
+		if(!$this->CheckWhenToUpdate())
+		{
+			echo "Its not time to update";
+			return;
+		}
+		
+		
 		if(!file_exists("customefields.json"))
 		{
 			echo "Custom Field Mapping Not Found\n";
 			echo "Run command php artisan fetch:customfields\n";
 			exit();
 		}
+		
 		$google = new Google();
 		$google->LoadSheet('1AWOu7CWyMNwuImZas4YmA6fKMVgq80HVdQnjh4hpogc','servers');
 		
@@ -350,16 +409,11 @@ class SyncJira extends Command
 			$this->customfields[$variable_name]=$customfield->id;
 		}
 		
-		while(1)
-		{
-			$now = new \DateTime();
-			
-			$google->Cell(12,'B',[[$now->format('m/d/Y H:i:s')]]);
-			$google->SaveSheet();
+		$now = new \DateTime();
+		$google->Cell(12,'B',[[$now->format('m/d/Y H:i:s')]]);
+		$google->SaveSheet();
 		
-			$this->PullActiveTickets();
-			sleep(5000);// Every  5 minutes
-		}
+		$this->PullActiveTickets();
 		return;
 		//\Log::info("Cron is working fine!");
     }
@@ -383,6 +437,7 @@ class SyncJira extends Command
 		return "$d days,$h hours,$m minutes";
 	}
 	function get_working_minutes($ini_str,$end_str){
+		
 		//config
 		$ini_time = [10,0]; //hr, min
 		$end_time = [18,0]; //hr, min

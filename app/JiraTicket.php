@@ -17,11 +17,7 @@ class JiraTicket
 	{
 		$this->customfields = $customfields;
 		$this->issue = $issue;
-		if($this->state == null)
-		{
-			$this->state = new \StdClass();
-			$this->alert = 0;
-		}
+		$this->alert=0;
 	}
 	function GetCurrentDateTime()
 	{
@@ -38,9 +34,6 @@ class JiraTicket
 	{	
 		switch($prop)
 		{
-			case 'alert':
-				$this->state->alert=$value;
-				break;
 			default:
 				$this->$prop=$value;
 		}
@@ -104,7 +97,7 @@ class JiraTicket
 					case 'low':
 						return 'low';
 					default:
-						return 'low';
+						return '';
 				}
 				return $this->issue->fields->priority->name;
 				break;
@@ -161,6 +154,9 @@ class JiraTicket
 					
 				}
 				return $transitions;
+				break;
+			case 'url':
+				return $this->issue->self;
 				break;
 			default:
 				return $this->$prop;
