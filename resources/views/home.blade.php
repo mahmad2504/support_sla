@@ -42,7 +42,7 @@
 			<div class="flex-item"> 
 				<a href="{{route('active')}}">Active </a>&nbsp&nbsp
 				<a href="{{route('closed')}}">Closed </a>&nbsp&nbsp
-				<a href="{{route('updated')}}">Resent updated</a>
+				<a href="{{route('updated')}}">Recent updated</a>
 			</div>
 			<div class="flex-item"> 
 				<br>
