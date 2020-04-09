@@ -25,7 +25,14 @@ class Database
 		$obj['summary'] = $ticket->summary;
 		$obj['status'] = $ticket->status;
 		$obj['_status'] = $ticket->_status;
-		$obj['first_contact'] = $ticket->first_contact_date->format('Y-m-d H:i');
+		if($ticket->first_contact_date != null)
+			$obj['first_contact'] = $ticket->first_contact_date->format('Y-m-d H:i');
+		else
+		{		
+			$obj['first_contact'] = '';
+			$obj['_status'] = 'WAITING';
+		}
+		
 		
 		if($ticket->resolutiondate != null)
 			$obj['resolvedon'] = $ticket->resolutiondate->format('Y-m-d H:i');
@@ -75,7 +82,7 @@ class Database
 
 		$cursor = $this->collection->find($query,$options);
 		$tickets = $cursor->toArray();
-		$tickets[0]->key='SIEJTEST-30';
+		//$tickets[0]->key='SIEJTEST-30';
 		//$tickets[0]->summary = "dsdsadsdsdasdsdsadsadsadsdsdasdsadsdsdasdsdsdasdsdasdsadsadsadsadsaddsadsadsdsd";
 		return $tickets;
 		//dd($tickets);

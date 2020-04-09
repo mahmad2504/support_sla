@@ -11,7 +11,7 @@ class JiraTicket
 	private $issue;
 	private $customfields = null;
 	private $state = null;
-	private $timezone='Asia/Karachi'; //'America/Chicago'
+	private $timezone='America/Chicago'; //'America/Chicago'
 	//private $timezone='America/Chicago';
     function __construct($issue,$customfields) 
 	{
@@ -159,7 +159,9 @@ class JiraTicket
 				return $this->issue->self;
 				break;
 			default:
-				return $this->$prop;
+				if(isset($this->$prop))
+					return $this->$prop;
+				return '';
 		}
 	}
 }

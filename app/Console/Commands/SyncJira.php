@@ -23,7 +23,7 @@ class SyncJira extends Command
 				 'medium'=>[20,10],
 				 'low'=>[40,20],
 				 ''=>[40,20]];
-	private $hours_day=8;
+	private $hours_day=12;
 	private $customfields=[];
     protected $signature = 'sync:jira';
 
@@ -314,12 +314,17 @@ class SyncJira extends Command
 		//echo $ticket->status."\n";
 		//echo $ticket->first_contact_date->format('Y-m-d\TH:i:s.u')."\n";
 		//echo "Updated=".$ticket->updated->format('Y-m-d\TH:i:s.u')."\n";
-		//$this->ComputeCWFTime($ticket);	
-		$this->UpdateTimeToResolution($ticket);	
-		$this->SendNotification($ticket);		
-		$this->UpdateTicketInJira($ticket);
-		$this->UpdateDb($ticket);
-		
+		//$this->ComputeCWFTime($ticket);
+	
+		if($ticket->first_contact_date == null)
+			$this->UpdateDb($ticket);
+		else
+		{
+			$this->UpdateTimeToResolution($ticket);
+			$this->SendNotification($ticket);		
+			$this->UpdateTicketInJira($ticket);
+			$this->UpdateDb($ticket);
+		}
 	}
 	public function PullActiveTickets()
 	{
@@ -328,7 +333,9 @@ class SyncJira extends Command
 		$last_updated = $this->db->Get('last_updated');
 		
 		//$last_updated = getenv("LAST_UPDATED");
-		$jql = 'project=SIEJIR_TEST  and  "First Contact Date" is not null  and (cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
+		//$jql = 'project=SIEJIR_TEST  and  "First Contact Date" is not null  and (cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
+		$jql = 'project=SIEJIR_TEST   and (cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
+		
 		//$jql = 'project=SIEJIR_TEST  and  "First Contact Date" is not null  and  statusCategory  != Done)';
 		//$jql = 'project=SIEJIR_TEST';
 		if(($last_updated !='')&&($last_updated !=null))
@@ -430,8 +437,8 @@ class SyncJira extends Command
 		$m = floor(($ss%3600)/60);
 		$h = floor(($ss)/3600);
 		
-		$d = floor($h/8);
-		$h = $h%8;
+		$d = floor($h/$this->hours_day);
+		$h = $h%$this->hours_day;
 		
 		//return "$d days, $h hours, $m minutes, $s seconds";
 		return "$d days,$h hours,$m minutes";
@@ -439,8 +446,8 @@ class SyncJira extends Command
 	function get_working_minutes($ini_str,$end_str){
 		
 		//config
-		$ini_time = [10,0]; //hr, min
-		$end_time = [18,0]; //hr, min
+		$ini_time = [8,0]; //hr, min
+		$end_time = [20,0]; //hr, min
 		//date objects
 		$ini = date_create($ini_str);
 		$ini_wk = date_time_set(date_create($ini_str),$ini_time[0],$ini_time[1]);
