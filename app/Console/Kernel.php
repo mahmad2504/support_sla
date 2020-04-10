@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         //
-		 Commands\SyncJira::class,
+		
     ];
 
     /**
@@ -25,10 +25,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-		$schedule
-        -> command('sync:jira')
-        -> everyMinute()
-        -> appendOutputTo ('laravel_output.log');
+		
     }
 
     /**

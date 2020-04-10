@@ -92,7 +92,7 @@
 			}
 		},
         {title:"Summary", field:"summary", sorter:"string", align:"left"},
-		{title:"First Contact", field:"first_contact", sorter:"string", align:"center",
+		{title:"First Contact", field:"first_contact_date", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
 				return cell.getValue().substring(0,10);
@@ -106,37 +106,37 @@
 				return cell.getValue()+' Days';
 			}
 		},
-		{title:"Net Time spent", field:"net_time_consumed", sorter:"string", align:"center",
+		{title:"Net Time spent", field:"net_time_to_resolution", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
-				days = cell.getRow().getData().net_minutes_consumed/(60*8);
+				days = cell.getRow().getData().net_minutes_to_resolution/(60*24);
 				values = cell.getValue().split(",");
-				return days.toFixed(2)+ ' Days'; //values[0]+'<small style="font-weight:bold;">&nbsp'+values[1].split(" ")[0]+':'+values[2].split(" ")[0]+'</small>';
+				return days.toFixed(1)+ ' Days'; //values[0]+'<small style="font-weight:bold;">&nbsp'+values[1].split(" ")[0]+':'+values[2].split(" ")[0]+'</small>';
 			},
 			sorter:function(a, b, aRow, bRow, column, dir, sorterParams){
-				va = aRow.getData().net_minutes_consumed;
-				vb = bRow.getData().net_minutes_consumed;
+				va = aRow.getData().net_minutes_to_resolution;
+				vb = bRow.getData().net_minutes_to_resolution;
 				return va - vb; //you must return the difference between the two values
 			}
 		},
 		
-		{title:"Gross Time spent", field:"gross_time_consumed", sorter:"string", align:"center",
+		{title:"Gross Time spent", field:"gross_time_to_resolution", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
-				days = cell.getRow().getData().gross_minutes_consumed/(60*24);
+				days = cell.getRow().getData().gross_minutes_to_resolution/(60*24);
 				//values = cell.getValue().split(",");
-				return days.toFixed(2)+' Days';//values[0]+'<small style="font-weight:bold;">&nbsp'+values[1].split(" ")[0]+':'+values[2].split(" ")[0]+'</small>';
+				return days.toFixed(1)+' Days';//values[0]+'<small style="font-weight:bold;">&nbsp'+values[1].split(" ")[0]+':'+values[2].split(" ")[0]+'</small>';
 			},
 			sorter:function(a, b, aRow, bRow, column, dir, sorterParams){
-				va = aRow.getData().gross_minutes_consumed;
-				vb = bRow.getData().gross_minutes_consumed;
+				va = aRow.getData().gross_minutes_to_resolution;
+				vb = bRow.getData().gross_minutes_to_resolution;
 				return va - vb; //you must return the difference between the two values
 			}
 		},
-		{title:"gross minutes consumed", field:"gross_minutes_consumed", sorter:"number", align:"center",visible:false},
+		{title:"gross minutes consumed", field:"gross_minutes_to_resolution", sorter:"number", align:"center",visible:false},
 		{title:"Quota(min)", field:"minutes_quota", sorter:"number", align:"center",visible:false},
-		{title:"Consumed (min)", field:"net_minutes_consumed", sorter:"number", align:"center",visible:false},
-		{title:"Resolved On", field:"resolvedon", sorter:"string", align:"center",
+		{title:"net minutes consumed", field:"net_minutes_to_resolution", sorter:"number", align:"center",visible:false},
+		{title:"Resolved On", field:"resolutiondate", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
 				return cell.getValue().substring(0,10);

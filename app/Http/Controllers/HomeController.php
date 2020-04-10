@@ -27,6 +27,15 @@ class HomeController extends Controller
 		$this->db = new Database();
 		$this->last_updated = $this->db->Get('last_updated');
     }
+	public function ActiveTicketData(Request $request)
+	{
+		dd($tickets = $this->db->LoadActiveTickets());
+	}
+	public function ClosedTicketData(Request $request)
+	{
+		dd($tickets = $this->db->LoadClosedTickets());
+	}
+	
 	public function Active(Request $request)
 	{
 		
