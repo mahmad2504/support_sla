@@ -121,7 +121,7 @@ class Sync extends Command
 		$rebuild = $this->argument('rebuild');
 		
 		$this->db = new Database();
-		if(0)//!$this->CheckWhenToUpdate())
+		if(!$this->CheckWhenToUpdate())
 		{
 			echo "Its not time to update";
 			return;
