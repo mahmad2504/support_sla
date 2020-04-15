@@ -51,7 +51,7 @@
 				<div style="box-shadow: 3px 3px #888888;" id="table"></div>
 			</div>
 			<div class="flex-item">
-				<small> Last Updated {{ $last_updated}} <a id="update" href="#">Initiate update</a> </small>
+				<small> Last Updated {{ $last_updated}} CST <a id="update" href="#">Click to update</a> </small>
 				
 			</div>
 		</div>
@@ -92,26 +92,51 @@
 			}
 		},
         {title:"Summary", field:"summary", sorter:"string", align:"left"},
-		{title:"First Contact", field:"first_contact_date", sorter:"string", align:"center",
-			formatter:function(cell, formatterParams, onRendered)
-			{
-				return cell.getValue().substring(0,10);
-			}
-		},
 		{title:"E", field:"service_level", sorter:"number", align:"center"},
-		{title:"Priority", field:"priority", sorter:"string", align:"center"},
 		{title:"SLA", field:"sla", sorter:"number", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
 				return cell.getValue()+' Days';
 			}
 		},
+		{title:"First Contact", field:"first_contact_date", sorter:"string", align:"center",
+			formatter:function(cell, formatterParams, onRendered)
+			{	
+				violation_firstcontact = cell.getRow().getData().violation_firstcontact;
+				//if(cell.getRow().getData().created < cell.getValue())
+				if((violation_firstcontact==1)&&(cell.getValue() == ''))
+					$(cell.getElement()).css({"color":"red"});
+				//if(cell.getValue() == '')
+					return cell.getRow().getData().net_time_to_firstcontact;
+				//else
+				//	return cell.getValue();
+			}
+		},
+		{title:"Created", field:"created", sorter:"string", align:"center",visible:false,
+			formatter:function(cell, formatterParams, onRendered)
+			{
+				return cell.getValue().substring(0,10);
+			}
+		},
+		{title:"Priority", field:"priority", sorter:"string", align:"center"},
 		{title:"Net Time spent", field:"net_time_to_resolution", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
-				days = cell.getRow().getData().net_minutes_to_resolution/(60*24);
-				values = cell.getValue().split(",");
-				return days.toFixed(1)+ ' Days'; //values[0]+'<small style="font-weight:bold;">&nbsp'+values[1].split(" ")[0]+':'+values[2].split(" ")[0]+'</small>';
+				value = cell.getValue();
+				values = value.split(',');
+				if(values.length ==1)
+					return;
+				if(values.length != 3)
+					return 'Invalid';
+				days = values[0].split(' ');
+				hours = values[1].split(' ');
+				min = values[2].split(' ');
+				if((days[0] == 0)&&(hours[0]==0))
+					return '';
+				if((days[0] == 0)&&(hours[0]!=0))
+					return hours[0]+' Hours';
+				else
+					return days[0]+'.'+hours[0]+' Days';
 			},
 			sorter:function(a, b, aRow, bRow, column, dir, sorterParams){
 				va = aRow.getData().net_minutes_to_resolution;
@@ -123,9 +148,21 @@
 		{title:"Gross Time spent", field:"gross_time_to_resolution", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
-				days = cell.getRow().getData().gross_minutes_to_resolution/(60*24);
-				//values = cell.getValue().split(",");
-				return days.toFixed(1)+' Days';//values[0]+'<small style="font-weight:bold;">&nbsp'+values[1].split(" ")[0]+':'+values[2].split(" ")[0]+'</small>';
+				value = cell.getValue();
+				
+				values = value.split(',');
+				if(values.length ==1)
+					return;
+				if(values.length != 3)
+					return 'Invalid';
+				days = values[0].split(' ');
+				hours = values[1].split(' ');
+				if((days[0] == 0)&&(hours[0]==0))
+					return '';
+				if((days[0] == 0)&&(hours[0]!=0))
+					return hours[0]+' Hours';
+				else
+					return days[0]+'.'+hours[0]+' Days';
 			},
 			sorter:function(a, b, aRow, bRow, column, dir, sorterParams){
 				va = aRow.getData().gross_minutes_to_resolution;
@@ -133,17 +170,84 @@
 				return va - vb; //you must return the difference between the two values
 			}
 		},
+		//{title:"minutes first contact", field:"net_minutes_to_firstcontacte", sorter:"number", align:"center",visible:true},
+		
 		{title:"gross minutes consumed", field:"gross_minutes_to_resolution", sorter:"number", align:"center",visible:false},
 		{title:"Quota(min)", field:"minutes_quota", sorter:"number", align:"center",visible:false},
 		{title:"net minutes consumed", field:"net_minutes_to_resolution", sorter:"number", align:"center",visible:false},
-		{title:"Resolved On", field:"resolutiondate", sorter:"string", align:"center",
+		{title:"Resolved On", field:"resolutiondate", sorter:"string", align:"center",visible:false,
 			formatter:function(cell, formatterParams, onRendered)
 			{
 				return cell.getValue().substring(0,10);
 			}
 		},
-		{title:"Status", field:"status", sorter:"string", align:"center",visible:true},
-		{title:"State", field:"_status", sorter:"string", align:"center",visible:true,
+		
+		{title:"Time Consumed", field:"percent_time_consumed", sorter:"number", align:"left",visible:true,
+			formatter:function(cell, formatterParams, onRendered)
+			{
+				_status = cell.getRow().getData()._status;
+				time_consumed = cell.getValue();
+				if(_status == 'RESOLVED')
+				{
+					return  '<span style="text-align: center;display: inline-block;width:'+'100'+'%;color:white;background-color:grey;"><small>'+time_consumed+'%</small></span>';
+				}
+				if(time_consumed <50)
+				{
+					bcolor='ForestGreen';
+					fcolor='white';
+				}
+				else if(time_consumed <75)
+				{
+					bcolor='Gold';
+					fcolor='black';
+				}
+				else if(time_consumed <100)
+				{
+					bcolor='orange';
+					fcolor='black';
+				}
+				else
+				{
+					bcolor='red';
+					fcolor='white';
+				}
+				
+				return  '<span style="text-align: center;display: inline-block;width:'+time_consumed+'%;color:'+fcolor+';background-color:'+bcolor+';"><small>'+time_consumed+'%</small></span>';
+			}
+		},
+		{title:"Status", field:"status", sorter:"string", align:"center",visible:true,
+			formatter:function(cell, formatterParams, onRendered)
+			{
+				first_contact_date = cell.getRow().getData().first_contact_date;
+				_status = cell.getRow().getData()._status;
+				$(cell.getElement()).css({"background":"white"});
+				$(cell.getElement()).css({"color":"black"});
+				$(cell.getElement()).css({"border":"1px solid white"});
+				
+				if(_status == 'RESOLVED')
+				{
+					$(cell.getElement()).css({"background":"grey"});
+					$(cell.getElement()).css({"color":"white"});
+					return  cell.getValue();
+				}
+					
+				if(first_contact_date == '')
+				{
+					$(cell.getElement()).css({"background":"orange"});
+					return 'Waiting First Contact';
+				}
+				
+				if( (cell.getValue() == 'Waiting Customer Feedback')||(cell.getValue() == 'Queued'))
+				{
+					$(cell.getElement()).css({"background":"yellow"});
+					return  cell.getValue();
+				}
+				$(cell.getElement()).css({"color":"white"});
+				$(cell.getElement()).css({"background":"green"});
+				return  cell.getValue();
+			}
+		},
+		{title:"State", field:"_status", sorter:"string", align:"center",visible:false,
 			formatter:function(cell, formatterParams, onRendered)
 			{
 				percent_time_consumed = cell.getRow().getData().percent_time_consumed;

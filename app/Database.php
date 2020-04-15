@@ -1,7 +1,6 @@
 <?php
 namespace App;
 use \MongoDB\Client;
-
 class Database
 {
 	function __construct()
@@ -59,6 +58,43 @@ class Database
 		if(!isset($ticket->alert))
 			$ticket->alert=0;
 	}
+	public function UpdateFirstContactDelay($ticket)
+	{
+		if($ticket->first_contact_date != '')
+		{
+			//echo $ticket->created." ".$ticket->first_contact_date."\n";
+			$ticket->net_minutes_to_firstcontact = JiraTicket::get_working_minutes($ticket->created,$ticket->first_contact_date );
+		}
+		else
+		{
+			$now =  JiraTicket::GetCurrentDateTime();
+			//echo $ticket->created." ".$now->format('Y-m-d\TH:i:s.u')."\n";
+			//2020-03-25 00:37 2020-03-25 03:57
+			$ticket->net_minutes_to_firstcontact = JiraTicket::get_working_minutes($ticket->created,$now->format('Y-m-d\TH:i:s.u') );
+		}
+		$ticket->net_time_to_firstcontact = JiraTicket::seconds2human($ticket->net_minutes_to_firstcontact*60);	
+		//echo $ticket->violation_firstcontact."\n";
+	
+		if($ticket->firstcontact_minutes_quota<$ticket->net_minutes_to_firstcontact)
+		{
+			if($ticket->violation_firstcontact == 0)
+			{
+				JiraTicket::UpdateCustomField($ticket->key,'violation_firstcontact',1);
+			}
+			$ticket->violation_firstcontact = 1;
+		}
+		else
+		{
+			if($ticket->violation_firstcontact == 1)
+			{
+				JiraTicket::UpdateCustomField($ticket->key,'violation_firstcontact',0);
+			}
+			$ticket->violation_firstcontact = 0;
+		}
+		//echo $ticket->net_minutes_to_firstresponse."\n";
+		//dd($ticket->created)."\n";
+		
+	}
 	public function UpdateTimeToResolution($ticket)
 	{
 		if(($ticket->resolutiondate != '')&&($ticket->first_contact_date != ''))
@@ -85,22 +121,33 @@ class Database
 			$ticket->net_minutes_to_resolution = JiraTicket::get_working_minutes($ticket->first_contact_date,$now->format('Y-m-d\TH:i:s.u'));
 			
 		}
-		echo "Net minutes=$ticket->net_minutes_to_resolution\n";
-		echo "waitminutes=$ticket->waitminutes\n";
+		
+			
+		if(!isset($ticket->net_minutes_to_resolution))
+			$ticket->net_minutes_to_resolution = 0;
+		//echo "Net minutes=$ticket->net_minutes_to_resolution\n";
+		//echo "waitminutes=$ticket->waitminutes\n";
 		$ticket->net_minutes_to_resolution = $ticket->net_minutes_to_resolution - $ticket->waitminutes ;
-		echo "Net minutes=$ticket->net_minutes_to_resolution\n";
+		//echo "Net minutes=$ticket->net_minutes_to_resolution\n";
 		
 		$ticket->net_time_to_resolution  = JiraTicket::seconds2human($ticket->net_minutes_to_resolution*60);	
 		//echo "Net time=$ticket->net_time_to_resolution\n";
 
+		if(isset($difference))
+		{
+			$ticket->gross_minutes_to_resolution = $difference->days * 24 * 60;
+			$ticket->gross_minutes_to_resolution += $difference->h * 60;
+			$ticket->gross_minutes_to_resolution += $difference->i;
 		
-		$ticket->gross_minutes_to_resolution = $difference->days * 24 * 60;
-		$ticket->gross_minutes_to_resolution += $difference->h * 60;
-		$ticket->gross_minutes_to_resolution += $difference->i;
-		
-		$ticket->gross_time_to_resolution=JiraTicket::seconds2human($ticket->gross_minutes_to_resolution*60);
-		$ticket->gross_time_to_resolution=$difference->days." days,".$difference->h." hours,".$difference->i." minutes";
-
+			$ticket->gross_time_to_resolution=JiraTicket::seconds2human($ticket->gross_minutes_to_resolution*60);
+			$ticket->gross_time_to_resolution=$difference->days." days,".$difference->h." hours,".$difference->i." minutes";
+		}
+		else
+		{
+			$ticket->gross_minutes_to_resolution = 0;	
+			$ticket->gross_time_to_resolution = '';
+		}
+			
 
 		//echo "Gross minutes=$ticket->gross_minutes_to_resolution\n";
 		//echo "days = ". $difference->days."\n";
@@ -114,9 +161,9 @@ class Database
 		
 		$ticket->percent_time_consumed = 100;
 		if($ticket->net_minutes_to_resolution <= $ticket->minutes_quota)
-			$ticket->percent_time_consumed = round($ticket->net_minutes_to_resolution/$ticket->minutes_quota*100,2);
+			$ticket->percent_time_consumed = round($ticket->net_minutes_to_resolution/$ticket->minutes_quota*100,1);
 
-
+			
 		/*echo "ticket->gross_minutes_to_resolution=$ticket->gross_time_to_resolution\n";
 		echo "ticket->net_minutes_to_resolution=$ticket->net_time_to_resolution\n";
 		
@@ -127,7 +174,7 @@ class Database
 	
 	function SaveTicket($ticket)
 	{
-		echo "Saving ".$ticket->key."\n";
+		//echo "Saving ".$ticket->key."\n";
 		$query=['key'=>$ticket->key];
 		$options=['upsert'=>true];
 		
@@ -137,7 +184,9 @@ class Database
 		$obj->summary = $ticket->summary;
 		$obj->status = $ticket->status;
 		$obj->_status = $ticket->_status;
+		$obj->violation_firstcontact = $ticket->violation_firstcontact;
 		
+		$obj->firstcontact_minutes_quota = $ticket->firstcontact_minutes_quota;
 		if(($ticket->first_contact_date != null)||($ticket->first_contact_date != ''))
 		{
 			if($ticket->first_contact_date instanceof \DateTime)
@@ -157,6 +206,13 @@ class Database
 		}
 		else
 			$obj->resolutiondate = '';
+		
+		if($ticket->created instanceof \DateTime)
+			$obj->created = $ticket->created->format('Y-m-d H:i');
+		else
+			$obj->created = $ticket->created;
+		
+		
 		$obj->waitminutes = $ticket->waitminutes;
 		if($ticket->updated instanceof \DateTime)
 			$obj->updated = $ticket->updated->format('Y-m-d H:i');
@@ -167,6 +223,7 @@ class Database
 		$obj->sla = $ticket->sla;
 		$obj->minutes_quota = $ticket->minutes_quota;
 		$this->UpdateTimeToResolution($obj);
+		$this->UpdateFirstContactDelay($obj);
 		$this->SendNotification($obj);
 		$obj= json_decode(json_encode($obj));
 		$this->collection->updateOne($query,['$set'=>$obj],$options);

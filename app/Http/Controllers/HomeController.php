@@ -8,11 +8,7 @@ use App\Database;
 use Auth;
 use Illuminate\Http\Request;
 use Response;
-use App\Products;
-use App\CVEStatus;
-use App\CVE;
-use App\Cache;
-use App\Ldap;
+use App\JiraTicket;
 use Artisan;
 class HomeController extends Controller
 {
@@ -40,29 +36,55 @@ class HomeController extends Controller
 	{
 		
 		$tickets = $this->db->LoadActiveTickets();
-		$last_updated=$this->last_updated;
+		
+		$lu = new \DateTime($this->last_updated);
+		JiraTicket::SetTimeZone($lu);
+		$last_updated = $lu->format('Y-m-d H:i:s');
+		
 		$jira_url = env('JIRA_HOST','')."/browse/";
 		return view('home',compact('tickets','last_updated','jira_url'));
 	}
 	public function Closed(Request $request)
 	{
 		$tickets = $this->db->LoadClosedTickets();
-		$last_updated=$this->last_updated;
+		
+		$lu = new \DateTime($this->last_updated);
+		JiraTicket::SetTimeZone($lu);
+		$last_updated = $lu->format('Y-m-d H:i:s');
+		
 		$jira_url = env('JIRA_HOST','')."/browse/";
 		return view('home',compact('tickets','last_updated','jira_url'));
 	}
 	public function AllUpdated(Request $request)
 	{
 		$tickets = $this->db->LoadAllTickets();
-		$last_updated=$this->last_updated;
+		$lu = new \DateTime($this->last_updated);
+		JiraTicket::SetTimeZone($lu);
+		$last_updated = $lu->format('Y-m-d H:i:s');
+		
 		$jira_url = env('JIRA_HOST','')."/browse/";
 		return view('home',compact('tickets','last_updated','jira_url'));
+	}
+	function checkIsAValidDate($myDateString)
+	{
+		return (bool)strtotime($myDateString);
 	}
 	public function Sync(Request $request)
 	{
 		$force_update=1;
+		if($request->rebuild != null)
+		{
+			if($this->checkIsAValidDate($request->rebuild))
+				$force_update=$request->rebuild;
+			else
+				return ['message'=>"Invalid rebuild date"];
+			
+		}
 		$this->db->Save(compact('force_update'));
 		//return Response::json(['error' => 'Invalid Credentials'], 404); 
-		return ['message'=>"Update initiated in background"];
+		if($request->rebuild !=null)
+			return ['message'=>"Rebuild from ".$force_update." Initiated in background"];
+		else
+			return ['message'=>"Update initiated in background"];
 	}
 }

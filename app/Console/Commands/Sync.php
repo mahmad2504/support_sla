@@ -50,7 +50,7 @@ class Sync extends Command
 		echo "Query for active tickets \n".$jql."\n";
 		
 		$expand = ['changelog'];
-		$fields = ['priority','key','summary','updated','statuscategorychangedate','status','resolutiondate',$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution];
+		$fields = ['priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution];
 		$issues = [];
 		while(1)
 		{
@@ -81,19 +81,14 @@ class Sync extends Command
 		}
 	}
 	
-	public function Process($tickets)
-	{
-		foreach($tickets as $ticket)
-		{
-			
-		}
-	}
+	
 
 	function CheckWhenToUpdate()
 	{
 		$last_updated = $this->db->Get('last_updated');
 		$force_update = $this->db->Get('force_update');
-		if($force_update == 1)
+		$this->force_update = $force_update;
+		if($force_update != 0)
 		{
 			$force_update=0;
 			$this->db->Save(compact('force_update'));
@@ -114,30 +109,42 @@ class Sync extends Command
 		}
 		return true;
 	}
-	
+
     public function handle()
     {
+	
         //
 		$rebuild = $this->argument('rebuild');
-		
 		$this->db = new Database();
-		if(!$this->CheckWhenToUpdate())
+		if($rebuild == null)
 		{
-			echo "Its not time to update";
-			return;
+			if(!$this->CheckWhenToUpdate())
+			{
+				echo "Its not time to update";
+				return;
+			}
 		}
-		
 		$this->cf = new CustomFields();
 		$new_updated=new \DateTime();
 		$last_updated = $this->db->Get('last_updated');
 		
 		if($rebuild != null)
-			$last_updated='2020-01-01';
-		
+		{
+			$date = explode('=',$rebuild );
+			if(count($date)>1)
+				$last_updated = $date[1];
+			else
+				$last_updated='2020-01-01';
+		}
+		if(isset($this->force_update))
+			if($this->force_update > 1)
+				$last_updated=$this->force_update;
+
 		$tickets = $this->SearchJira($last_updated);
 		$this->SaveTickets($tickets);
 		
 		$tickets = $this->db->LoadActiveTickets();
+		echo "Active tickets=".count($tickets)."\n";
 		$this->SaveTickets($tickets);
 		
 		$last_updated = $new_updated->format('Y-m-d H:i');

@@ -5,7 +5,9 @@ namespace App;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use JiraRestApi\Issue\IssueField;
+use JiraRestApi\Issue\IssueService;
+use App\CustomFields;
 class JiraTicket
 {
 	private $issue;
@@ -18,6 +20,8 @@ class JiraTicket
 				 'medium'=>[20,10],
 				 'low'=>[40,20],
 				 ''=>[40,20]];
+	private $sla_firstcontact = [2,1];
+			
 	//private $timezone='America/Chicago';
     function __construct($issue,$cf) 
 	{
@@ -26,16 +30,39 @@ class JiraTicket
 		$this->alert=0;
 		$this->waitminutes = $this->ComputeWaitingTime();
 		$this->sla=$this->sla[$this->priority][$this->service_level];
+		$this->firstcontact_minutes_quota=$this->sla_firstcontact[$this->service_level]*self::$hours_day*60;
 		$this->minutes_quota=$this->sla*self::$hours_day*60;
 		//echo $this->waitminutes."\n";
 	}
+	static function  UpdateCustomField($key,$prop,$value)
+	{
+		$cf = new CustomFields();
+		$issueField = new IssueField(true);
+		$issueService = new IssueService();
+		switch($prop)
+		{
+			case 'violation_firstcontact':
+			if($value == 0)
+				$issueField->addCustomField($cf->$prop,['value' => 'False']);
+			else
+				$issueField->addCustomField($cf->$prop,['value' => 'True']);
+			
+			$editParams = [
+			'notifyUsers' => true,
+			];
+			$ret = $issueService->update($key, $issueField,$editParams);	
+			echo "Updating ".$key."  ".$prop."<->".$cf->$prop."=".$value."\n";
+			break;
+			
+		}
+	}			
 	static function  GetCurrentDateTime()
 	{
 		$now =  new \DateTime();
 		$now->setTimezone(new \DateTimeZone(self::$timezone));
 		return $now;
 	}
-	function SetTimeZone($datetime)
+	static function SetTimeZone($datetime)
 	{
 		$datetime->setTimezone(new \DateTimeZone(self::$timezone));
 	}
@@ -58,53 +85,100 @@ class JiraTicket
 		$h = $h%self::$hours_day;
 		
 		//return "$d days, $h hours, $m minutes, $s seconds";
-		return "$d days,$h hours,$m minutes";
+		return "$d day,$h hour,$m min";
 	}
+	/**
+	 * Check if the given DateTime object is a business day.
+	 *
+	 * @param DateTime $date
+	 * @return bool
+	 */
+	public static function isBusinessDay(\DateTime $date)
+	{
+		return true;
+		//Weekends
+		if ($date->format('N') > 5) {
+			return false;
+		}
+
+		//Hard coded public Holidays
+		$holidays = [
+			"Human Rights Day"      => new \DateTime(date('Y') . '-03-21'),
+			"Good Friday"           => new \DateTime(date('Y') . '-03-30'),
+			"Family Day"            => new \DateTime(date('Y') . '-04-02'),
+			"Freedom Day"           => new \DateTime(date('Y') . '-04-27'),
+			"Labour Day"            => new \DateTime(date('Y') . '-05-01'),
+			"Youth Day"             => new \DateTime(date('Y') . '-06-16'),
+			"National Women's Day"  => new \DateTime(date('Y') . '-08-09'),
+			"Heritage Day"          => new \DateTime(date('Y') . '-09-24'),
+			"Day of Reconciliation" => new \DateTime(date('Y') . '-12-16'),
+		];
+
+		foreach ($holidays as $holiday) {
+			if ($holiday->format('Y-m-d') === $date->format('Y-m-d')) {
+				return false;
+			}
+		}
+
+		//December company holidays
+		if (new \DateTime(date('Y') . '-12-15') <= $date && $date <= new \DateTime((date('Y') + 1) . '-01-08')) {
+			return false;
+		}
+
+		// Other checks can go here
+
+		return true;
+	}
+
+	/**
+	 * Get the available business time between two dates (in seconds).
+	 *
+	 * @param $start
+	 * @param $end
+	 * @return mixed
+	 */
+	public static function get_working_seconds($start, $end)
+	{
+		$start = $start instanceof \DateTime ? $start : new \DateTime($start);
+		$end = $end instanceof \DateTime ? $end : new \DateTime($end);
+		$dates = [];
+
+		$date = clone $start;
+
+		while ($date <= $end) {
+
+			$datesEnd = (clone $date)->setTime(23, 59, 59);
+
+			if (self::isBusinessDay($date)) {
+				$dates[] = (object)[
+					'start' => clone $date,
+					'end'   => clone ($end < $datesEnd ? $end : $datesEnd),
+				];
+			}
+
+			$date->modify('+1 day')->setTime(0, 0, 0);
+		}
+
+		return array_reduce($dates, function ($carry, $item) {
+
+			$businessStart = (clone $item->start)->setTime(8, 0, 0);
+			$businessEnd = (clone $item->start)->setTime(20, 00, 0);
+
+			$start = $item->start < $businessStart ? $businessStart : $item->start;
+			$end = $item->end > $businessEnd ? $businessEnd : $item->end;
+
+			//Diff in seconds
+			return $carry += max(0, $end->getTimestamp() - $start->getTimestamp());
+		}, 0);
+	}
+	
+	
+	
 	public static function get_working_minutes($ini_str,$end_str){
 		
-		//config
-		$ini_time = [8,0]; //hr, min
-		$end_time = [20,0]; //hr, min
-		//date objects
-		$ini = date_create($ini_str);
-		$ini_wk = date_time_set(date_create($ini_str),$ini_time[0],$ini_time[1]);
-		$end = date_create($end_str);
-		$end_wk = date_time_set(date_create($end_str),$end_time[0],$end_time[1]);
-		//days
-		$workdays_arr = self::get_workdays($ini,$end);
-		$workdays_count = count($workdays_arr);
-		$workday_seconds = (($end_time[0] * 60 + $end_time[1]) - ($ini_time[0] * 60 + $ini_time[1])) * 60;
-		//get time difference
-		$ini_seconds = 0;
-		$end_seconds = 0;
-		if(in_array($ini->format('Y-m-d'),$workdays_arr)) $ini_seconds = $ini->format('U') - $ini_wk->format('U');
-		if(in_array($end->format('Y-m-d'),$workdays_arr)) $end_seconds = $end_wk->format('U') - $end->format('U');
-		$seconds_dif = $ini_seconds > 0 ? $ini_seconds : 0;
-		if($end_seconds > 0) $seconds_dif += $end_seconds;
-		//final calculations
-		$working_seconds = ($workdays_count * $workday_seconds) - $seconds_dif;
-		return round($working_seconds/60);
+		return round(self::get_working_seconds($ini_str,$end_str)/60);
 	}
-	public static function get_workdays($ini,$end)
-	{
-		//config
-		$skipdays = [6,0]; //saturday:6; sunday:0
-		$skipdates = []; //eg: ['2016-10-10'];
-		//vars
-		$current = clone $ini;
-		$current_disp = $current->format('Y-m-d');
-		$end_disp = $end->format('Y-m-d');
-		$days_arr = [];
-		//days range
-		while($current_disp <= $end_disp){
-			if(!in_array($current->format('w'),$skipdays) && !in_array($current_disp,$skipdates)){
-				$days_arr[] = $current_disp;
-			}
-			$current->add(new \DateInterval('P1D')); //adds one day
-			$current_disp = $current->format('Y-m-d');
-		}
-		return $days_arr;
-	}
+	
 	public function ComputeWaitingTime()
 	{
 		$ticket = $this;
@@ -193,7 +267,7 @@ class JiraTicket
 				return $this->issue->fields->summary;
 				break;
 			case 'updated':
-				$this->SetTimeZone($this->issue->fields->updated);
+				self::SetTimeZone($this->issue->fields->updated);
 				return $this->issue->fields->updated;
 				break;
 			case 'statuscategorychangedate':
@@ -217,13 +291,17 @@ class JiraTicket
 					exit();
 				}
 				break;
+			case 'created':
+				self::SetTimeZone($this->issue->fields->created);
+				return $this->issue->fields->created;
+				break;
 			case 'resolutiondate':
 				if($this->issue->fields->status->statuscategory->id != 3) // if not resolved
 					return null;
 				if(isset($this->issue->fields->resolutiondate))
 				{
 					$resolutiondate = new \DateTime($this->issue->fields->resolutiondate);
-					$this->SetTimeZone($resolutiondate);
+					self::SetTimeZone($resolutiondate);
 					return $resolutiondate;
 				}
 				else 
@@ -254,18 +332,30 @@ class JiraTicket
 				}
 				return 0;
 				break;
+			
 			case 'first_contact_date':
 				$prop = $this->customfields['first_contact_date'];
 				if(isset($this->issue->fields->customFields[$prop]))
 				{
 					$first_contact_date= new \DateTime($this->issue->fields->customFields[$prop]);
-					$this->SetTimeZone($first_contact_date);
+					self::SetTimeZone($first_contact_date);
 					return $first_contact_date;
 				}
 				return null;
+			case 'violation_firstcontact':
+				$prop = $this->customfields['violation_firstcontact'];
+				//dump($this->issue->key);
+				if(isset($this->issue->fields->customFields[$prop]))
+				{
+					if(strtolower($this->issue->fields->customFields[$prop]->value) == 'yes' || strtolower($this->issue->fields->customFields[$prop]->value) == 'true')
+						return 1;
+					else
+						return 0;
+				}
+				return 0;
+				break;
 			case 'violation_time_to_resolution':
 				$prop = $this->customfields['violation_time_to_resolution'];
-				
 				if(isset($this->issue->fields->customFields[$prop]))
 				{
 					//echo $this->issue->fields->customFields[$prop]->value;
@@ -290,7 +380,7 @@ class JiraTicket
 						if($item->field == "status")
 						{
 							$item->created= new \DateTime($history->created);
-							$this->SetTimeZone($item->created);
+							self::SetTimeZone($item->created);
 							$transitions[] = $item;
 						}
 					}
