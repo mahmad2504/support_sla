@@ -95,8 +95,6 @@ class JiraTicket
 	 */
 	public static function isBusinessDay(\DateTime $date)
 	{
-		return true;
-		//Weekends
 		if ($date->format('N') > 5) {
 			return false;
 		}
@@ -113,7 +111,7 @@ class JiraTicket
 			"Heritage Day"          => new \DateTime(date('Y') . '-09-24'),
 			"Day of Reconciliation" => new \DateTime(date('Y') . '-12-16'),
 		];
-
+		$holidays = [];
 		foreach ($holidays as $holiday) {
 			if ($holiday->format('Y-m-d') === $date->format('Y-m-d')) {
 				return false;
@@ -161,7 +159,7 @@ class JiraTicket
 
 		return array_reduce($dates, function ($carry, $item) {
 
-			$businessStart = (clone $item->start)->setTime(8, 0, 0);
+			$businessStart = (clone $item->start)->setTime(8, 000, 0);
 			$businessEnd = (clone $item->start)->setTime(20, 00, 0);
 
 			$start = $item->start < $businessStart ? $businessStart : $item->start;

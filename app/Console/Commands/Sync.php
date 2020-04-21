@@ -47,6 +47,7 @@ class Sync extends Command
 		if(($last_updated !='')&&($last_updated !=null))
 			$jql = 'project=SIEJIR_TEST and updated > "'.$last_updated.'"';
 	
+		//$jql = 'issue in (SIEJTEST-13)';
 		echo "Query for active tickets \n".$jql."\n";
 		
 		$expand = ['changelog'];
@@ -112,7 +113,11 @@ class Sync extends Command
 
     public function handle()
     {
-	
+		//echo "2020-04-17 08:00','2020-04-17 09:00\n";
+		//echo JiraTicket::get_working_minutes('2020-04-17 17:52','2020-04-21 00:28' );
+		//echo JiraTicket::get_working_minutes('2020-04-17 08:00','2020-04-18 09:00');
+		//return ;
+		
         //
 		$rebuild = $this->argument('rebuild');
 		$this->db = new Database();

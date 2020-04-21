@@ -68,9 +68,14 @@ class Database
 		else
 		{
 			$now =  JiraTicket::GetCurrentDateTime();
-			//echo $ticket->created." ".$now->format('Y-m-d\TH:i:s.u')."\n";
+			$ticket->net_minutes_to_firstcontact = JiraTicket::get_working_minutes($ticket->created,$now->format('Y-m-d H:i') );
+			//if('SIEJTEST-13' == $ticket->key)
+			//{
+			//	echo $ticket->key."\n";
+			//	echo $ticket->created." - ".$now->format('Y-m-d H:i')."\n";
+			//	echo $ticket->net_minutes_to_firstcontact."\n";
 			//2020-03-25 00:37 2020-03-25 03:57
-			$ticket->net_minutes_to_firstcontact = JiraTicket::get_working_minutes($ticket->created,$now->format('Y-m-d\TH:i:s.u') );
+			//}
 		}
 		$ticket->net_time_to_firstcontact = JiraTicket::seconds2human($ticket->net_minutes_to_firstcontact*60);	
 		//echo $ticket->violation_firstcontact."\n";

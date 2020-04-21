@@ -112,7 +112,7 @@
 				//	return cell.getValue();
 			}
 		},
-		{title:"Created", field:"created", sorter:"string", align:"center",visible:false,
+		{title:"Created", field:"created", sorter:"string", align:"center",visible:true,
 			formatter:function(cell, formatterParams, onRendered)
 			{
 				return cell.getValue().substring(0,10);
