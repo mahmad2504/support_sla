@@ -18,7 +18,9 @@ class CustomFields extends Command
 				'gross_minutes_to_resolution'=>'gross_minutes_to_resolution',  
 				'net_time_to_resolution'=>'Net Time to Resolution',
 				'waiting_time'=>'Time in Status(WFC)',
-				'violation_firstcontact'=>'Violation First Contact'
+				'violation_firstcontact'=>'Violation First Contact',
+				'solution_provided_date'=>'Solution Provided Date',
+				'test_case_provided_date'=>'Test / Use Case Provided'
 			];
     /**
      * The name and signature of the console command.

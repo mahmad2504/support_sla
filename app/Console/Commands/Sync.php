@@ -51,7 +51,8 @@ class Sync extends Command
 		echo "Query for active tickets \n".$jql."\n";
 		
 		$expand = ['changelog'];
-		$fields = ['priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution];
+		$fields = ['priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution,
+		$this->cf->solution_provided_date,$this->cf->test_case_provided_date];
 		$issues = [];
 		while(1)
 		{
@@ -74,11 +75,11 @@ class Sync extends Command
 			$start = $start + count($data->issues);
 		}
 	}
-	public function SaveTickets($tickets)
+	public function SaveTickets($tickets,$fromdb=0)
 	{
 		foreach($tickets as $ticket)
 		{
-			$this->db->SaveTicket($ticket);
+			$this->db->SaveTicket($ticket,$fromdb);
 		}
 	}
 	
@@ -150,7 +151,7 @@ class Sync extends Command
 		
 		$tickets = $this->db->LoadActiveTickets();
 		echo "Active tickets=".count($tickets)."\n";
-		$this->SaveTickets($tickets);
+		$this->SaveTickets($tickets,1);
 		
 		$last_updated = $new_updated->format('Y-m-d H:i');
 		$this->db->Save(compact('last_updated'));

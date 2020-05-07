@@ -14,7 +14,8 @@
         "laravel/framework": "^6.0",
         "laravel/tinker": "^1.0",
         "lesstif/php-jira-rest-client": "^1.19",
-		"mongodb/mongodb": "^1.5"
+		"mongodb/mongodb": "^1.5",
+		"phpmailer/phpmailer": "^6.1"
     },
     "require-dev": {
         "filp/whoops": "^2.0",

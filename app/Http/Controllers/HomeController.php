@@ -9,6 +9,7 @@ use Auth;
 use Illuminate\Http\Request;
 use Response;
 use App\JiraTicket;
+use App\Email;
 use Artisan;
 class HomeController extends Controller
 {
@@ -86,5 +87,17 @@ class HomeController extends Controller
 			return ['message'=>"Rebuild from ".$force_update." Initiated in background"];
 		else
 			return ['message'=>"Update initiated in background"];
+	}
+	public function CheckEmail(Request $request)
+	{
+		echo "Email Checker";
+		
+		$email = new Email();
+		$obj = new \StdClass();
+		$obj->key = 'SIERJ-200';
+		$obj->percent_first_contact_time_consumed=100;
+		$obj->percent_first_contact_time_consumed=75;
+		$email->SendResolutionTimeEmail($obj);
+		
 	}
 }

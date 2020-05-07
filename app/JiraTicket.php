@@ -27,7 +27,6 @@ class JiraTicket
 	{
 		$this->customfields = $cf->customfields;
 		$this->issue = $issue;
-		$this->alert=0;
 		$this->waitminutes = $this->ComputeWaitingTime();
 		$this->sla=$this->sla[$this->priority][$this->service_level];
 		$this->firstcontact_minutes_quota=$this->sla_firstcontact[$this->service_level]*self::$hours_day*60;
@@ -41,6 +40,7 @@ class JiraTicket
 		$issueService = new IssueService();
 		switch($prop)
 		{
+			case 'violation_time_to_resolution':
 			case 'violation_firstcontact':
 			if($value == 0)
 				$issueField->addCustomField($cf->$prop,['value' => 'False']);
@@ -183,11 +183,13 @@ class JiraTicket
 		$interval = null;
 		$intervals = [];
 		//dd($ticket->transitions);
-		if($ticket->first_contact_date == null)
+		//$ticket->test_case_provided_date
+		
+		if($ticket->test_case_provided_date == null)
 			return 0;
 		foreach($ticket->transitions as $transition)
 		{
-			if($ticket->first_contact_date->format('U') >  $transition->created->format('U') )
+			if($ticket->test_case_provided_date->format('U') >  $transition->created->format('U') )
 				 $transition->created = $ticket->first_contact_date;
 			
 			if(($transition->toString == "Waiting Customer Feedback")||($transition->toString == "Queued"))
@@ -330,7 +332,24 @@ class JiraTicket
 				}
 				return 0;
 				break;
-			
+			case 'solution_provided_date':
+				$prop = $this->customfields['solution_provided_date'];
+				if(isset($this->issue->fields->customFields[$prop]))
+				{
+					$solution_provided_date= new \DateTime($this->issue->fields->customFields[$prop]);
+					self::SetTimeZone($solution_provided_date);
+					return $solution_provided_date;
+				}
+				return null;	
+			case 'test_case_provided_date':
+				$prop = $this->customfields['test_case_provided_date'];
+				if(isset($this->issue->fields->customFields[$prop]))
+				{
+					$test_case_provided_date= new \DateTime($this->issue->fields->customFields[$prop]);
+					self::SetTimeZone($test_case_provided_date);
+					return $test_case_provided_date;
+				}
+				return null;
 			case 'first_contact_date':
 				$prop = $this->customfields['first_contact_date'];
 				if(isset($this->issue->fields->customFields[$prop]))
@@ -358,10 +377,10 @@ class JiraTicket
 				{
 					//echo $this->issue->fields->customFields[$prop]->value;
 					if(strtolower($this->issue->fields->customFields[$prop]->value) == 'yes' || strtolower($this->issue->fields->customFields[$prop]->value) == 'true')
-						return true;
-					return false;
+						return 1;
+					return 0;
 				}
-				return null;
+				return 0;
 			case 'gross_minutes_to_resolution':
 				$prop = $this->customfields['gross_minutes_to_resolution'];
 				if(isset($this->issue->fields->customFields[$prop]))

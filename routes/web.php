@@ -15,6 +15,7 @@ Route::get('/', 'HomeController@active')->name('active');
 Route::get('/updated', 'HomeController@AllUpdated')->name('updated'); 
 Route::get('/closed', 'HomeController@Closed')->name('closed'); 
 Route::get('/sync', 'HomeController@sync')->name('sync'); 
+Route::get('/checkemail', 'HomeController@CheckEmail')->name('checkemail');
 
 Route::get('/data/active', 'HomeController@activeticketdata')->name('activeticketdata');
 Route::get('/data/closed', 'HomeController@closedticketdata')->name('closedticketdata');

@@ -24,39 +24,128 @@ class Database
 		return null;
 		
 	}
-	public function SendEmail($ticket)
+	public function SendFirstContactEmail($ticket)
 	{
-		
-		return 0;//-1
+		$email = new Email();
+		$email->SendFirstContactEmail($ticket);
 	}
-	public function SendNotification($ticket)
+	public function SendResolutionTimeEmail($ticket)
 	{
-		if($ticket->percent_time_consumed >= 50)
-		{
-			if($ticket->alert=0)
-			{
-				if($this->SendEmail($ticket)==0)
-					$ticket->alert=1;
-			}
-		}
-		if($ticket->percent_time_consumed >= 75)
-		{
-			if($ticket->alert<2)
-			{
-				if($this->SendEmail($ticket)==0)
-					$ticket->alert=2;
-			}
-		}
+		$email = new Email();
+		$email->SendResolutionTimeEmail($ticket);
+		return 0;
+	}
+	public function SendTimeToResolutionNotification($ticket)
+	{
+		if(!isset($ticket->time_to_resolution_alert))
+			$ticket->time_to_resolution_alert=0;
+		if($ticket->time_to_resolution_alert == '')
+			$ticket->time_to_resolution_alert=0;
+		
 		if($ticket->percent_time_consumed >= 100)
 		{
-			if($ticket->alert<3)
+			if($ticket->time_to_resolution_alert<5)
 			{
-				if($this->SendEmail($ticket)==0)
-					$ticket->alert=3;
+				$this->SendResolutionTimeEmail($ticket);
+				$ticket->time_to_resolution_alert=5;
 			}
 		}
-		if(!isset($ticket->alert))
-			$ticket->alert=0;
+		else if($ticket->percent_time_consumed >= 90)
+		{
+			if($ticket->time_to_resolution_alert<4)
+			{
+				$this->SendResolutionTimeEmail($ticket);
+				$ticket->time_to_resolution_alert=4;
+			}
+		}
+		else if($ticket->percent_time_consumed >= 75)
+		{
+			if($ticket->time_to_resolution_alert<3)
+			{
+				$this->SendResolutionTimeEmail($ticket);
+				$ticket->time_to_resolution_alert=3;
+			}
+		}
+		else if($ticket->percent_time_consumed >= 50)
+		{
+			if($ticket->time_to_resolution_alert<2)
+			{
+				$this->SendResolutionTimeEmail($ticket);
+				$ticket->time_to_resolution_alert=2;
+			}
+	}
+		else if($ticket->percent_time_consumed >= 25)
+	{
+			if($ticket->time_to_resolution_alert<1)
+		{
+				$this->SendResolutionTimeEmail($ticket);
+				$ticket->time_to_resolution_alert=1;
+			}
+		}
+	}
+	public function SendFirstContactNotification($ticket)
+	{
+		if(!isset($ticket->first_contact_alert))
+			$ticket->first_contact_alert=0;
+		if($ticket->first_contact_alert == '')
+			$ticket->first_contact_alert=0;
+		
+
+		
+		if(($ticket->first_contact_date == '')||($ticket->first_contact_date == null))
+		{
+			$ticket->percent_first_contact_time_consumed = 100	;
+			if($ticket->net_minutes_to_firstcontact <= $ticket->firstcontact_minutes_quota)
+				$ticket->percent_first_contact_time_consumed = round($ticket->net_minutes_to_firstcontact/$ticket->firstcontact_minutes_quota*100,1);
+		}
+		else
+			return ;
+		
+		//echo $ticket->key."\n";
+		//echo $ticket->percent_first_contact_time_consumed."\n";
+		//echo $ticket->first_contact_alert."\n";
+		
+		
+		if($ticket->percent_first_contact_time_consumed >= 100)
+		{
+			if($ticket->first_contact_alert<5)
+			{
+				$this->SendFirstContactEmail($ticket);
+				$ticket->first_contact_alert=5;
+			}
+		}
+		else if($ticket->percent_first_contact_time_consumed >= 90)
+			{
+			if($ticket->first_contact_alert<4)
+			{
+				$this->SendFirstContactEmail($ticket);
+				$ticket->first_contact_alert=4;
+			}
+		}
+		else if($ticket->percent_first_contact_time_consumed >= 75)
+		{
+			if($ticket->first_contact_alert<3)
+			{
+				$this->SendFirstContactEmail($ticket);
+				$ticket->first_contact_alert=3;
+			}
+			}
+		else if($ticket->percent_first_contact_time_consumed >= 50)
+		{
+			if($ticket->first_contact_alert<2)
+			{
+				$this->SendFirstContactEmail($ticket);
+				$ticket->first_contact_alert=2;
+		}
+		}
+		else if($ticket->percent_first_contact_time_consumed >= 25)
+		{
+			if($ticket->first_contact_alert<1)
+			{
+				$this->SendFirstContactEmail($ticket);
+				$ticket->first_contact_alert=1;
+			}
+		}
 	}
 	public function UpdateFirstContactDelay($ticket)
 	{
@@ -96,9 +185,39 @@ class Database
 			}
 			$ticket->violation_firstcontact = 0;
 		}
+		
 		//echo $ticket->net_minutes_to_firstresponse."\n";
 		//dd($ticket->created)."\n";
 		
+	}
+	public function UpdateNetTimeToResolution($ticket)
+	{
+		$ticket->net_minutes_to_resolution = 0;
+		$ticket->net_time_to_resolution = '';
+		if($ticket->test_case_provided_date != null)
+		{
+			if(($ticket->solution_provided_date != null)||($ticket->resolutiondate != ''))// Ticket net resoluton time closedir
+			{
+				if($ticket->solution_provided_date != null)
+				 $finish = new \DateTime($ticket->solution_provided_date);
+				else
+				 $finish =  new \DateTime($ticket->resolutiondate);
+			}
+			else
+				$finish = JiraTicket::GetCurrentDateTime();
+			
+			$test_case_provided_date = new \DateTime($ticket->test_case_provided_date);
+			$ticket->net_minutes_to_resolution = JiraTicket::get_working_minutes($test_case_provided_date,$finish);
+			//echo $ticket->key."\n";
+			///echo $ticket->net_minutes_to_resolution."\n";
+			//echo $ticket->waitminutes."\n";
+			
+			$ticket->net_minutes_to_resolution = $ticket->net_minutes_to_resolution - $ticket->waitminutes ;
+			$ticket->net_time_to_resolution  = JiraTicket::seconds2human($ticket->net_minutes_to_resolution*60);	
+		
+		}
+		//echo $ticket->net_minutes_to_resolution."\n";
+		//echo $ticket->net_time_to_resolution."\n";
 	}
 	public function UpdateTimeToResolution($ticket)
 	{
@@ -162,12 +281,29 @@ class Database
 		//if($ticket->gross_minutes_to_resolution < $ticket->net_minutes_to_resolution)
 		//	$ticket->gross_minutes_to_resolution = $ticket->net_minutes_to_resolution;
 		
-		
+		$this->UpdateNetTimeToResolution($ticket);
 		
 		$ticket->percent_time_consumed = 100;
-		if($ticket->net_minutes_to_resolution <= $ticket->minutes_quota)
+		if($ticket->net_minutes_to_resolution < $ticket->minutes_quota)
 			$ticket->percent_time_consumed = round($ticket->net_minutes_to_resolution/$ticket->minutes_quota*100,1);
-
+		
+		if($ticket->percent_time_consumed>=100)
+		{
+			if($ticket->violation_time_to_resolution == 0)
+			{
+				JiraTicket::UpdateCustomField($ticket->key,'violation_time_to_resolution',1);
+			}
+			$ticket->violation_time_to_resolution = 1;
+		}
+		else
+		{
+			if($ticket->violation_time_to_resolution == 1)
+			{
+				JiraTicket::UpdateCustomField($ticket->key,'violation_time_to_resolution',0);
+			}
+			$ticket->violation_time_to_resolution = 0;
+		}
+			
 			
 		/*echo "ticket->gross_minutes_to_resolution=$ticket->gross_time_to_resolution\n";
 		echo "ticket->net_minutes_to_resolution=$ticket->net_time_to_resolution\n";
@@ -177,7 +313,7 @@ class Database
 			
 	}
 	
-	function SaveTicket($ticket)
+	function SaveTicket($ticket,$fromdb=0)
 	{
 		//echo "Saving ".$ticket->key."\n";
 		$query=['key'=>$ticket->key];
@@ -190,6 +326,7 @@ class Database
 		$obj->status = $ticket->status;
 		$obj->_status = $ticket->_status;
 		$obj->violation_firstcontact = $ticket->violation_firstcontact;
+		$obj->violation_time_to_resolution = $ticket->violation_time_to_resolution;
 		
 		$obj->firstcontact_minutes_quota = $ticket->firstcontact_minutes_quota;
 		if(($ticket->first_contact_date != null)||($ticket->first_contact_date != ''))
@@ -227,9 +364,33 @@ class Database
 		$obj->service_level = $ticket->service_level;
 		$obj->sla = $ticket->sla;
 		$obj->minutes_quota = $ticket->minutes_quota;
+		
+		//if(!isset($ticket->solution_provided_date))
+		//	dd($ticket);
+		if($ticket->solution_provided_date instanceof \DateTime)
+			$obj->solution_provided_date = $ticket->solution_provided_date->format('Y-m-d H:i');
+		else
+			$obj->solution_provided_date = $ticket->solution_provided_date;
+		
+		if($ticket->test_case_provided_date instanceof \DateTime)
+			$obj->test_case_provided_date = $ticket->test_case_provided_date->format('Y-m-d H:i');
+		else
+			$obj->test_case_provided_date = $ticket->test_case_provided_date;
+		//echo $obj->key."<br>";
+		//dump($obj->test_case_provided_date );
+		if(isset($ticket->first_contact_alert))
+			$obj->first_contact_alert = $ticket->first_contact_alert;
+		
+		if(isset($ticket->time_to_resolution_alert))
+			$obj->time_to_resolution_alert = $ticket->time_to_resolution_alert;
+		
 		$this->UpdateTimeToResolution($obj);
 		$this->UpdateFirstContactDelay($obj);
-		$this->SendNotification($obj);
+		if($fromdb)
+		{
+			$this->SendTimeToResolutionNotification($obj);
+			$this->SendFirstContactNotification($obj);
+		}
 		$obj= json_decode(json_encode($obj));
 		$this->collection->updateOne($query,['$set'=>$obj],$options);
 	}
@@ -241,7 +402,6 @@ class Database
 					'projection' => ['_id' => 0]];
 		$cursor = $this->collection->find($query,$options);
 		$tickets = $cursor->toArray();
-		
 		return $tickets;
 		//dd($tickets);
 		
