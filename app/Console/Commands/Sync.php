@@ -126,7 +126,7 @@ class Sync extends Command
 		{
 			if(!$this->CheckWhenToUpdate())
 			{
-				echo "Its not time to update";
+			//echo "Its not time to update";
 				return;
 			}
 		}

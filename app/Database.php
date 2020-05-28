@@ -90,8 +90,6 @@ class Database
 		if($ticket->first_contact_alert == '')
 			$ticket->first_contact_alert=0;
 		
-
-		
 		if(($ticket->first_contact_date == '')||($ticket->first_contact_date == null))
 		{
 			$ticket->percent_first_contact_time_consumed = 100	;
@@ -233,16 +231,16 @@ class Database
 			//echo "Net minutes to res=$ticket->net_minutes_to_resolution \n";
 			$difference = $first_contact_date->diff($resolutiondate);
 		}
-		else if(($ticket->resolutiondate == '')&&($ticket->first_contact_date != ''))
+		else if(($ticket->resolutiondate == ''))//&&($ticket->first_contact_date != ''))
 		{
 			//$ticket->first_contact_date =  new \DateTime('2020-03-25T08:57:00');
 			//$ticket->first_contact_date->setTimezone(new \DateTimeZone('Asia/Karachi'));
-			$first_contact_date = new \DateTime($ticket->first_contact_date);
+			$created = new \DateTime($ticket->created);
 			//echo "Firct Cnta Date=".$ticket->first_contact_date->format('Y-m-d\TH:i:s.u')."\n";
 			$now =  JiraTicket::GetCurrentDateTime();
 			//echo "Now =".$now->format('Y-m-d\TH:i:s.u')."\n";
-			$difference = $first_contact_date->diff($now);
-			$ticket->net_minutes_to_resolution = JiraTicket::get_working_minutes($ticket->first_contact_date,$now->format('Y-m-d\TH:i:s.u'));
+			$difference = $created->diff($now);
+			$ticket->net_minutes_to_resolution = JiraTicket::get_working_minutes($ticket->created,$now->format('Y-m-d\TH:i:s.u'));
 			
 		}
 		

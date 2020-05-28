@@ -190,7 +190,11 @@ class JiraTicket
 		foreach($ticket->transitions as $transition)
 		{
 			if($ticket->test_case_provided_date->format('U') >  $transition->created->format('U') )
+			{
 				 $transition->created = $ticket->first_contact_date;
+				 if($transition->created == null)
+					  $transition->created  = $ticket->test_case_provided_date;
+			}
 			
 			if(($transition->toString == "Waiting Customer Feedback")||($transition->toString == "Queued"))
 			{
@@ -203,7 +207,8 @@ class JiraTicket
 					$interval = new \StdClass();
 					$interval->start = $transition->created;
 					$interval->end  = $ticket->GetCurrentDateTime();
-					
+					//if($ticket->key == 'SIEJTEST-16')
+					//	dd($ticket->transitions);
 					$interval->waiting_minutes = self::get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
 					continue;
 				}
@@ -292,7 +297,7 @@ class JiraTicket
 				}
 				break;
 			case 'created':
-				self::SetTimeZone($this->issue->fields->created);
+					self::SetTimeZone($this->issue->fields->created);
 				return $this->issue->fields->created;
 				break;
 			case 'resolutiondate':
