@@ -184,16 +184,33 @@ class JiraTicket
 		$intervals = [];
 		//dd($ticket->transitions);
 		//$ticket->test_case_provided_date
+		$debug_ticket = 'SIEJIR-5531'; 
+		if(isset($ticket->debug))
+		{
+			echo "Test Case Provided";
+			dump($ticket->test_case_provided_date);
+			echo "first_contact_date";
+			dump($ticket->first_contact_date);
+			dump($ticket->transitions);
+		}
 		
 		if($ticket->test_case_provided_date == null)
 			return 0;
+		
+		
 		foreach($ticket->transitions as $transition)
 		{
+
 			if($ticket->test_case_provided_date->format('U') >  $transition->created->format('U') )
 			{
-				 $transition->created = $ticket->first_contact_date;
-				 if($transition->created == null)
-					  $transition->created  = $ticket->test_case_provided_date;
+				 $transition->created = $ticket->test_case_provided_date;//$ticket->first_contact_date;
+				 //if($transition->created == null)
+				///	  $transition->created  = $ticket->test_case_provided_date;
+			}
+			if($ticket->solution_provided_date != null)
+			{
+				if($ticket->solution_provided_date->format('U') < $transition->created->format('U'))
+					$transition->created = $ticket->solution_provided_date;
 			}
 			
 			if(($transition->toString == "Waiting Customer Feedback")||($transition->toString == "Queued"))
@@ -207,6 +224,10 @@ class JiraTicket
 					$interval = new \StdClass();
 					$interval->start = $transition->created;
 					$interval->end  = $ticket->GetCurrentDateTime();
+					if($ticket->solution_provided_date != null)
+					{
+						$interval->end = $ticket->solution_provided_date;					}
+					
 					//if($ticket->key == 'SIEJTEST-16')
 					//	dd($ticket->transitions);
 					$interval->waiting_minutes = self::get_working_minutes($interval->start->format('Y-m-d\TH:i:s.u'),$interval->end->format('Y-m-d\TH:i:s.u'));
@@ -253,10 +274,16 @@ class JiraTicket
 		{
 			if($interval->waiting_minutes <=0 )
 				continue;
+			if($ticket->key == $debug_ticket)
+				dump($interval);
 			
 			$waiting_minutes  += $interval->waiting_minutes;
 		}
-		
+		if($ticket->debug)
+		{
+			echo "waiting minutes=".$waiting_minutes."\r\n";
+			//dd($ticket->transitions);
+		}
 		return $waiting_minutes;
 	}
 	

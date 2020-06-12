@@ -190,6 +190,8 @@ class Database
 	}
 	public function UpdateNetTimeToResolution($ticket)
 	{
+		$debug_ticket = 'SIEJIR-5531'; 
+			
 		$ticket->net_minutes_to_resolution = 0;
 		$ticket->net_time_to_resolution = '';
 		if($ticket->test_case_provided_date != null)
@@ -209,7 +211,12 @@ class Database
 			//echo $ticket->key."\n";
 			///echo $ticket->net_minutes_to_resolution."\n";
 			//echo $ticket->waitminutes."\n";
-			
+			if(isset($ticket->debug))
+			{
+				echo "Solution provided date".$ticket->solution_provided_date."\r\n";
+				echo "Computed net minutes ".$ticket->net_minutes_to_resolution."\r\n";
+				echo "Waiting minutes ".$ticket->waitminutes."\r\n";
+			}
 			$ticket->net_minutes_to_resolution = $ticket->net_minutes_to_resolution - $ticket->waitminutes ;
 			$ticket->net_time_to_resolution  = JiraTicket::seconds2human($ticket->net_minutes_to_resolution*60);	
 		

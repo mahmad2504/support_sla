@@ -39,14 +39,18 @@ class Sync extends Command
     }
 	public function SearchJira($last_updated)
 	{
+		$debug = null;//'SIEJIR-5531';
 		$max = 500;
 		$start = 0;
 		$issueService = new IssueService();
 		$jql = 'project=SIEJIR_TEST   and (cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
-		$jql = 'project=SIEJIR_TEST';
+		$jql = 'project = Siebel_JIRA AND status != Closed AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe';
+		$jql = 'project=Siebel_JIRA  and updated >= startOfDay() ';
 		if(($last_updated !='')&&($last_updated !=null))
-			$jql = 'project=SIEJIR_TEST and updated > "'.$last_updated.'"';
+			$jql = 'project=Siebel_JIRA and updated >= "'.$last_updated.'"';
 	
+		if($debug != null)
+			$jql = 'key in ('.$debug.')';
 		//$jql = 'issue in (SIEJTEST-13)';
 		echo "Query for active tickets \n".$jql."\n";
 		
@@ -62,6 +66,8 @@ class Sync extends Command
 				foreach($data->issues as $issue)
 				{
 					$ticket = new JiraTicket($issue,$this->cf);
+					if($ticket->key == $debug)
+						$ticket->debug=1;
 					$issues[] = $ticket ;
 				}
 				echo count($issues)." Found"."\n";
@@ -82,9 +88,6 @@ class Sync extends Command
 			$this->db->SaveTicket($ticket,$fromdb);
 		}
 	}
-	
-	
-
 	function CheckWhenToUpdate()
 	{
 		$last_updated = $this->db->Get('last_updated');
@@ -130,6 +133,7 @@ class Sync extends Command
 				return;
 			}
 		}
+		//echo "ddd";
 		$this->cf = new CustomFields();
 		$new_updated=new \DateTime();
 		$last_updated = $this->db->Get('last_updated');
