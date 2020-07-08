@@ -101,17 +101,16 @@ class JiraTicket
 
 		//Hard coded public Holidays
 		$holidays = [
-			"Human Rights Day"      => new \DateTime(date('Y') . '-03-21'),
-			"Good Friday"           => new \DateTime(date('Y') . '-03-30'),
-			"Family Day"            => new \DateTime(date('Y') . '-04-02'),
-			"Freedom Day"           => new \DateTime(date('Y') . '-04-27'),
-			"Labour Day"            => new \DateTime(date('Y') . '-05-01'),
-			"Youth Day"             => new \DateTime(date('Y') . '-06-16'),
-			"National Women's Day"  => new \DateTime(date('Y') . '-08-09'),
-			"Heritage Day"          => new \DateTime(date('Y') . '-09-24'),
-			"Day of Reconciliation" => new \DateTime(date('Y') . '-12-16'),
+			"New Years Day"         => new \DateTime(date('Y') . '-01-01'),
+			"Memorial Day"          => new \DateTime(date('Y') . '-05-25'),
+			"Independence Day"      => new \DateTime(date('Y') . '-07-03'),
+			"Labor Day"             => new \DateTime(date('Y') . '-09-07'),
+			"Thanksgiving Day"      => new \DateTime(date('Y') . '-11-26'),
+			"Thanksgiving Day2"     => new \DateTime(date('Y') . '-11-27'),
+			"Floating Holiday1"     => new \DateTime(date('Y') . '-12-24'),
+			"Christmas Day"         => new \DateTime(date('Y') . '-12-25'),
+			"Floating Holiday2"     => new \DateTime(date('Y') . '-12-31'),
 		];
-		$holidays = [];
 		foreach ($holidays as $holiday) {
 			if ($holiday->format('Y-m-d') === $date->format('Y-m-d')) {
 				return false;
@@ -291,7 +290,9 @@ class JiraTicket
 	{
 		switch($prop)
 		{
-			
+			case 'assignee':
+				return $this->issue->fields->assignee->emailAddress;
+				break;
 			case 'key':
 				return $this->issue->key;
 				break;
@@ -440,6 +441,13 @@ class JiraTicket
 			case 'url':
 				return $this->issue->self;
 				break;
+			case 'account':
+				$prop = $this->customfields['account'];
+				if(isset($this->issue->fields->customFields[$prop]))
+				{
+					return $this->issue->fields->customFields[$prop];
+				}
+				return null;
 			default:
 				if(isset($this->$prop))
 					return $this->$prop;

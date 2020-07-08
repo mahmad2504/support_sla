@@ -26,13 +26,25 @@ class Database
 	}
 	public function SendFirstContactEmail($ticket)
 	{
-		$email = new Email();
-		$email->SendFirstContactEmail($ticket);
+		if($this->email)
+		{
+			$email = new Email();
+		   $quota = JiraTicket::seconds2human($ticket->firstcontact_minutes_quota*60);
+		   $email->SendFirstContactEmail($ticket,$quota);
+		}
+		else
+			echo "No email sent as configured\r\n";
 	}
 	public function SendResolutionTimeEmail($ticket)
 	{
-		$email = new Email();
-		$email->SendResolutionTimeEmail($ticket);
+		if($this->email)
+		{
+			$email = new Email();
+			$quota = JiraTicket::seconds2human($ticket->minutes_quota*60);
+			$email->SendResolutionTimeEmail($ticket,$quota);
+		}
+		else
+			echo "No email sent as configured\r\n";
 		return 0;
 	}
 	public function SendTimeToResolutionNotification($ticket)
@@ -328,12 +340,29 @@ class Database
 		
 		$obj->key = $ticket->key;
 		$obj->summary = $ticket->summary;
+		if($fromdb == 1)
+		{
+			if(!isset($ticket->assignee))
+				$ticket->assignee = '';
+		}
+		$obj->assignee = $ticket->assignee;
 		$obj->status = $ticket->status;
 		$obj->_status = $ticket->_status;
 		$obj->violation_firstcontact = $ticket->violation_firstcontact;
 		$obj->violation_time_to_resolution = $ticket->violation_time_to_resolution;
 		
 		$obj->firstcontact_minutes_quota = $ticket->firstcontact_minutes_quota;
+		if($fromdb == 0)
+		{
+			$obj->account = $ticket->account;  
+			
+		}
+		else
+		{
+			if(!isset($ticket->account))
+				$obj->account = "";
+		}
+	
 		if(($ticket->first_contact_date != null)||($ticket->first_contact_date != ''))
 		{
 			if($ticket->first_contact_date instanceof \DateTime)

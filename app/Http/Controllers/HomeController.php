@@ -26,7 +26,7 @@ class HomeController extends Controller
     }
 	public function ActiveTicketData(Request $request)
 	{
-		dd($tickets = $this->db->LoadActiveTickets());
+	   $tickets = $this->db->LoadActiveTickets();
 	}
 	public function ClosedTicketData(Request $request)
 	{

@@ -20,7 +20,8 @@ class CustomFields extends Command
 				'waiting_time'=>'Time in Status(WFC)',
 				'violation_firstcontact'=>'Violation First Contact',
 				'solution_provided_date'=>'Solution Provided Date',
-				'test_case_provided_date'=>'Test / Use Case Provided'
+				'test_case_provided_date'=>'Test / Use Case Provided',
+				'account'=>'Account'
 			];
     /**
      * The name and signature of the console command.

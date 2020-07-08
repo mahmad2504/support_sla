@@ -39,7 +39,9 @@
 	
 	
 		<div class="row"> 
+		    
 			<div class="flex-item"> 
+				<div style="float:right"><a id="download" href="#">Download</a> </div>
 				<a href="{{route('active')}}">Active </a>&nbsp&nbsp
 				<a href="{{route('closed')}}">Closed </a>&nbsp&nbsp
 				<a href="{{route('updated')}}">Recent updated</a>
@@ -50,14 +52,15 @@
 			<div class="flex-item">
 				<div style="box-shadow: 3px 3px #888888;" id="table"></div>
 			</div>
+			
 			<div class="flex-item">
 				<small> Last Updated {{ $last_updated}} CST <a id="update" href="#">Click to update</a> </small>
-				
 			</div>
 		</div>
 	</div>
     </body>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
 	<script src="{{ asset('tabulator/js/tabulator.min.js') }}" ></script>
 	<script src="{{ asset('attention/attention.js') }}" ></script>
 	<script>
@@ -92,6 +95,7 @@
 			}
 		},
         {title:"Summary", field:"summary", sorter:"string", align:"left"},
+		{title:"Account", field:"account", sorter:"string", align:"left"},
 		{title:"E", field:"service_level", sorter:"number", align:"center"},
 		{title:"SLA", field:"sla", sorter:"number", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
@@ -112,6 +116,8 @@
 				//	return cell.getValue();
 			}
 		},
+		{title:"Net minutes first_contact", field:"net_minutes_to_firstcontact", sorter:"number", align:"center",visible:false},
+		
 		{title:"Created", field:"created", sorter:"string", align:"center",visible:false,
 			formatter:function(cell, formatterParams, onRendered)
 			{
@@ -144,7 +150,7 @@
 				return va - vb; //you must return the difference between the two values
 			}
 		},
-		
+		{title:"Net minutes consumed", field:"net_minutes_to_resolution", sorter:"number", align:"center",visible:false},
 		{title:"Gross Time spent", field:"gross_time_to_resolution", sorter:"string", align:"center",
 			formatter:function(cell, formatterParams, onRendered)
 			{
@@ -170,11 +176,12 @@
 				return va - vb; //you must return the difference between the two values
 			}
 		},
+		{title:"Gross minutes consumed", field:"gross_minutes_to_resolution", sorter:"number", align:"center",visible:false},
 		//{title:"minutes first contact", field:"net_minutes_to_firstcontacte", sorter:"number", align:"center",visible:true},
 		
-		{title:"gross minutes consumed", field:"gross_minutes_to_resolution", sorter:"number", align:"center",visible:false},
+		
 		{title:"Quota(min)", field:"minutes_quota", sorter:"number", align:"center",visible:false},
-		{title:"net minutes consumed", field:"net_minutes_to_resolution", sorter:"number", align:"center",visible:false},
+		
 		{title:"Resolved On", field:"resolutiondate", sorter:"string", align:"center",visible:false,
 			formatter:function(cell, formatterParams, onRendered)
 			{
@@ -242,6 +249,17 @@
 					$(cell.getElement()).css({"background":"yellow"});
 					return  cell.getValue();
 				}
+				if(cell.getValue() == 'Pending Enhancements')
+				{
+					$(cell.getElement()).css({"background":"MediumTurquoise"});
+					return  cell.getValue();
+				}
+				if(cell.getValue() == 'Pending Defect')
+				{
+					$(cell.getElement()).css({"background":"DarkKhaki"});
+					return  cell.getValue();
+				}
+	
 				$(cell.getElement()).css({"color":"white"});
 				$(cell.getElement()).css({"background":"green"});
 				return  cell.getValue();
@@ -329,6 +347,16 @@
 	$(document).ready(function()
 	{
 		//define table
+		$('#download').on('click',function()
+		{
+			table.showColumn("gross_minutes_to_resolution");
+			table.showColumn("net_minutes_to_resolution");
+			table.showColumn("net_minutes_to_firstcontact");
+			table.download("xlsx", "support.xlsx", {sheetName:"tickets"});
+			table.hideColumn("gross_minutes_to_resolution");
+			table.hideColumn("net_minutes_to_resolution");
+			table.hideColumn("net_minutes_to_firstcontact");
+		});
 		$('#update').on('click',function()
 		{
 			$.ajax({

@@ -17,7 +17,7 @@ class Sync extends Command
      *
      * @var string
      */
-    protected $signature = 'sync:database {rebuild?}';
+protected $signature = 'sync:database {--rebuild=0} {--email=1} {--beat=0}';
 
     /**
      * The console command description.
@@ -45,9 +45,9 @@ class Sync extends Command
 		$issueService = new IssueService();
 		$jql = 'project=SIEJIR_TEST   and (cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
 		$jql = 'project = Siebel_JIRA AND status != Closed AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe';
-		$jql = 'project=Siebel_JIRA  and updated >= startOfDay() ';
+		$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe and updated >= startOfDay() ';
 		if(($last_updated !='')&&($last_updated !=null))
-			$jql = 'project=Siebel_JIRA and updated >= "'.$last_updated.'"';
+			$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe  and updated >= "'.$last_updated.'"';
 	
 		if($debug != null)
 			$jql = 'key in ('.$debug.')';
@@ -55,8 +55,8 @@ class Sync extends Command
 		echo "Query for active tickets \n".$jql."\n";
 		
 		$expand = ['changelog'];
-		$fields = ['priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution,
-		$this->cf->solution_provided_date,$this->cf->test_case_provided_date];
+		$fields = ['assignee','priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution,
+		$this->cf->solution_provided_date,$this->cf->test_case_provided_date,$this->cf->account];
 		$issues = [];
 		while(1)
 		{
@@ -88,32 +88,30 @@ class Sync extends Command
 			$this->db->SaveTicket($ticket,$fromdb);
 		}
 	}
-	function CheckWhenToUpdate()
+	function TimeToUpdate($min)
 	{
-		$last_updated = $this->db->Get('last_updated');
-		$force_update = $this->db->Get('force_update');
-		$this->force_update = $force_update;
-		if($force_update != 0)
+		$fu = $this->db->Get('force_update');
+		$H=date("H");
+		$i=date("i");
+		if($fu != 0)
 		{
 			$force_update=0;
 			$this->db->Save(compact('force_update'));
-			return true;
+			//echo date("m")."\n";
+			//echo date("d")."\n";
+			//echo date("Y")."\n";
+			//echo date("H")."\n";
+			//echo date("i")."\n";
+			
+			if($fu == 1)
+				return date("Y-m-d", mktime(0,0,0, date("m") , date("d")-1,date("Y")))." ".$H.":".$i;
+			return $fu;
 		}
+		if(($min % 30)==0)	
+			return date("Y-m-d", mktime(0, 0, 0, date("m") , date("d")-1,date("Y")))." ".$H.":".$i;
 		
-		if(($last_updated !='')&&($last_updated !=null))
-		{
-			$dt1 =new \DateTime($last_updated);
-			$now =  new \DateTime();
-			$difference = $now->diff($dt1);
-			$minutes = $difference->days * 24 * 60;
-			$minutes += $difference->h * 60;
-			$minutes += $difference->i;
-			if($minutes>30)
-				return true;
 			return false;
 		}
-		return true;
-	}
 
     public function handle()
     {
@@ -123,34 +121,45 @@ class Sync extends Command
 		//return ;
 		
         //
-		$rebuild = $this->argument('rebuild');
+		$minutes = $this->option('beat');
+		if($minutes % 10 == 0)// Every 10 minutes
+		    file_get_contents("https://script.google.com/macros/s/AKfycbwCNrLh0BxlYtR3I9iW2Z-4RQK88Hryd4DEC03lIYLoLCce80A/exec?func=alive&device=support_sla");
+				
+			
+		$rebuild = $this->option('rebuild');
+		
+		//dd($rebuild);
 		$this->db = new Database();
-		if($rebuild == null)
+		
+		$email = $this->option('email');
+		
+		if($email==1)
+			$this->db->email=1;
+		else
+			$this->db->email=0;
+
+
+		//file_get_contents("https://script.google.com/macros/s/AKfycbwCNrLh0BxlYtR3I9iW2Z-4RQK88Hryd4DEC03lIYLoLCce80A/exec?func=alive&device=support_sla");
+		
+		//dd($this->db->email);
+		if($rebuild == 0)
 		{
-			if(!$this->CheckWhenToUpdate())
+			$rebuild = $this->TimeToUpdate($minutes);
+			if($rebuild==false)
 			{
 			//echo "Its not time to update";
 				return;
 			}
 		}
+		
+		
 		//echo "ddd";
 		$this->cf = new CustomFields();
 		$new_updated=new \DateTime();
 		$last_updated = $this->db->Get('last_updated');
 		
-		if($rebuild != null)
-		{
-			$date = explode('=',$rebuild );
-			if(count($date)>1)
-				$last_updated = $date[1];
-			else
-				$last_updated='2020-01-01';
-		}
-		if(isset($this->force_update))
-			if($this->force_update > 1)
-				$last_updated=$this->force_update;
 
-		$tickets = $this->SearchJira($last_updated);
+		$tickets = $this->SearchJira($rebuild);
 		$this->SaveTickets($tickets);
 		
 		$tickets = $this->db->LoadActiveTickets();
