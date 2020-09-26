@@ -345,6 +345,25 @@ class Database
 			if(!isset($ticket->assignee))
 				$ticket->assignee = '';
 		}
+		
+		$p = explode(">",$ticket->product_name);
+		if(count($p)==3)
+		{
+			$obj->product_name = explode("<",$p[1])[0];
+		}
+		else
+			$obj->product_name = $ticket->product_name;
+		
+		$obj->product_name = str_replace("\n","",$obj->product_name);
+		
+		$obj->issuetype = $ticket->issuetype;
+		$obj->component = '';
+		if($ticket->component != null)
+		{
+			$obj->component = $ticket->component;
+		}
+		$obj->issuelinks = $ticket->issuelinks;
+		$obj->resolution = $ticket->resolution;
 		$obj->assignee = $ticket->assignee;
 		$obj->status = $ticket->status;
 		$obj->_status = $ticket->_status;
@@ -376,12 +395,22 @@ class Database
 		if(($ticket->resolutiondate != null)||($ticket->resolutiondate != ''))
 		{
 			if($ticket->resolutiondate instanceof \DateTime)
+			{
 				$obj->resolutiondate = $ticket->resolutiondate->format('Y-m-d H:i');
+				$obj->closedon  = $ticket->resolutiondate->getTimestamp();
+			}
 			else
+			{
 				$obj->resolutiondate = $ticket->resolutiondate;
+				$obj->closedon = $ticket->closedon;
+			}
 		}
 		else
+		{
 			$obj->resolutiondate = '';
+			$obj->closedon = '';
+		}
+		
 		
 		if($ticket->created instanceof \DateTime)
 			$obj->created = $ticket->created->format('Y-m-d H:i');
@@ -442,9 +471,10 @@ class Database
 	}
 	function LoadClosedTickets()
 	{
-		$query = ['_status' => 'RESOLVED'];
-		$options = ['sort' => ['updated' => -1],
-				    'limit' => 50 ,
+		$date = new \DateTime("-6 months");
+		$query = ['_status' => 'RESOLVED','closedon'=>['$gte'=>$date->getTimestamp()]];
+		$options = ['sort' => ['closedon' => -1],
+				    //'limit' => 50 ,
 					'projection' => ['_id' => 0]];
 
 		$cursor = $this->collection->find($query,$options);

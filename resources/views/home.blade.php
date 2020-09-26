@@ -318,7 +318,10 @@
 				return cell.getValue().substring(0,10);
 			}
 		},
-		
+		{title:"Product", field:"product_name", sorter:"string", align:"center",visible:false}, 
+		{title:"Component", field:"component", sorter:"string", align:"center",visible:false},
+		{title:"Type", field:"issuetype", sorter:"string", align:"center",visible:false},
+		{title:"Resolution", field:"resolution", sorter:"string", align:"center",visible:false},
         /*{title:"Gender", field:"gender", sorter:"string", cellClick:function(e, cell){console.log("cell click")},},
         {title:"Height", field:"height", formatter:"star", align:"center", width:100},
         {title:"Favourite Color", field:"col", sorter:"string"},
@@ -352,10 +355,20 @@
 			table.showColumn("gross_minutes_to_resolution");
 			table.showColumn("net_minutes_to_resolution");
 			table.showColumn("net_minutes_to_firstcontact");
+			table.showColumn("resolution");
+			table.showColumn("issuetype");
+			table.showColumn("component");
+			table.showColumn("product_name");
+			
 			table.download("xlsx", "support.xlsx", {sheetName:"tickets"});
 			table.hideColumn("gross_minutes_to_resolution");
 			table.hideColumn("net_minutes_to_resolution");
 			table.hideColumn("net_minutes_to_firstcontact");
+			table.hideColumn("resolution");
+			table.hideColumn("issuetype");
+			table.hideColumn("component");
+			table.hideColumn("product_name");
+			
 		});
 		$('#update').on('click',function()
 		{

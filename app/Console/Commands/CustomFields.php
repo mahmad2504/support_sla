@@ -17,10 +17,12 @@ class CustomFields extends Command
 				'gross_time_to_resolution'=>'Gross Time to Resolution',   
 				'gross_minutes_to_resolution'=>'gross_minutes_to_resolution',  
 				'net_time_to_resolution'=>'Net Time to Resolution',
-				'waiting_time'=>'Time in Status(WFC)',
+				//'waiting_time'=>'Time in Status(WFC)',
 				'violation_firstcontact'=>'Violation First Contact',
 				'solution_provided_date'=>'Solution Provided Date',
 				'test_case_provided_date'=>'Test / Use Case Provided',
+				'product_name'=>'Product Name',
+				'component'=>'Component',
 				'account'=>'Account'
 			];
     /**
@@ -65,6 +67,9 @@ class CustomFields extends Command
 			{
 				foreach($this->variable_customfields_map as $variablename=>$fieldname)
 				{
+					if($field->id == 'customfield_15556')
+						continue;
+					
 					if($fieldname == $field->name)
 					{
 						$this->variable_customfields_map[$variablename] = $field; 

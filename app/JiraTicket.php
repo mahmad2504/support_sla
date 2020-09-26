@@ -448,6 +448,44 @@ class JiraTicket
 					return $this->issue->fields->customFields[$prop];
 				}
 				return null;
+			case 'product_name':
+				$prop = $this->customfields['product_name'];
+				if(isset($this->issue->fields->customFields[$prop]))
+				{
+					return $this->issue->fields->customFields[$prop];
+				}
+				return null;
+			case 'issuetype':
+				return $this->issue->fields->issuetype->name;
+			case 'component':
+				$prop = $this->customfields['component'];
+				if(isset($this->issue->fields->customFields[$prop]))
+				{
+					return $this->issue->fields->customFields[$prop]->value;
+				}
+				return null;
+			case 'resolution':
+				if(isset($this->issue->fields->resolution))
+					return $this->issue->fields->resolution->name;
+				return '';
+			case 'issuelinks':
+				//$issuelinks = [];
+				if(!isset($issue->fields->issuelinks))
+				{
+					
+					return [];
+				}
+				return [];
+				//dd($issue->fields->issuelinks);
+				//dd($issue->fields->issuelinks);
+				//foreach($issue->fields->issuelinks as $issuelink)
+				//{
+				//	if(isset($issuelink->inwardIssue))
+				//	{
+				//		$issuelinks[strtolower($issuelink->type->inward)][]=$issuelink->inwardIssue->key;
+				//	}
+				//}
+				return $issuelinks;
 			default:
 				if(isset($this->$prop))
 					return $this->$prop;

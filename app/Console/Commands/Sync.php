@@ -45,7 +45,7 @@ protected $signature = 'sync:database {--rebuild=0} {--email=1} {--beat=0}';
 		$issueService = new IssueService();
 		$jql = 'project=SIEJIR_TEST   and (cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
 		$jql = 'project = Siebel_JIRA AND status != Closed AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe';
-		$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe and updated >= startOfDay() ';
+		//$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe and updated >= startOfDay() ';
 		if(($last_updated !='')&&($last_updated !=null))
 			$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe  and updated >= "'.$last_updated.'"';
 	
@@ -55,8 +55,8 @@ protected $signature = 'sync:database {--rebuild=0} {--email=1} {--beat=0}';
 		echo "Query for active tickets \n".$jql."\n";
 		
 		$expand = ['changelog'];
-		$fields = ['assignee','priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution,
-		$this->cf->solution_provided_date,$this->cf->test_case_provided_date,$this->cf->account];
+		$fields = ['issuelinks','resolution','issuetype','assignee','priority','key','summary','updated','statuscategorychangedate','status','resolutiondate','created',$this->cf->violation_firstcontact,$this->cf->premium_support,$this->cf->first_contact_date,$this->cf->violation_time_to_resolution,$this->cf->gross_minutes_to_resolution,
+		$this->cf->solution_provided_date,$this->cf->test_case_provided_date,$this->cf->account,$this->cf->product_name,$this->cf->component];
 		$issues = [];
 		while(1)
 		{
