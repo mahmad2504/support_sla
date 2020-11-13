@@ -39,13 +39,18 @@ protected $signature = 'sync:database {--rebuild=0} {--email=1} {--beat=0}';
     }
 	public function SearchJira($last_updated)
 	{
-		$debug = null;//'SIEJIR-5531';
+		$debug = null;//'SIEJIR-5790';
 		$max = 500;
 		$start = 0;
 		$issueService = new IssueService();
 		$jql = 'project=SIEJIR_TEST   and (cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] is EMPTY or cf['.explode("_",$this->cf->gross_minutes_to_resolution)[1].'] =0 or  statusCategory  != Done)';
 		$jql = 'project = Siebel_JIRA AND status != Closed AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe';
 		//$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe and updated >= startOfDay() ';
+		
+		$minutes = $this->option('beat');
+		if($minutes == 0)
+			$last_updated = '2020-01-01';
+		
 		if(($last_updated !='')&&($last_updated !=null))
 			$jql = 'project=Siebel_JIRA AND "Product Name" !~ Vista AND "Product Name" !~ A2B AND "Product Name" !~ XSe  and updated >= "'.$last_updated.'"';
 	
@@ -76,6 +81,8 @@ protected $signature = 'sync:database {--rebuild=0} {--email=1} {--beat=0}';
 			foreach($data->issues as $issue)
 			{
 				$ticket = new JiraTicket($issue,$this->cf);
+				if($ticket->key == $debug)
+					$ticket->debug=1;
 				$issues[] = $ticket ;	
 			}
 			$start = $start + count($data->issues);

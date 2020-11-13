@@ -378,8 +378,12 @@ class JiraTicket
 				$prop = $this->customfields['test_case_provided_date'];
 				if(isset($this->issue->fields->customFields[$prop]))
 				{
+					//dump($this->issue->key);
+					//dump($this->issue->fields->customFields[$prop]);
 					$test_case_provided_date= new \DateTime($this->issue->fields->customFields[$prop]);
 					self::SetTimeZone($test_case_provided_date);
+					//dump($test_case_provided_date->format('Y-m-d\TH:i:s.u'));
+					
 					return $test_case_provided_date;
 				}
 				return null;

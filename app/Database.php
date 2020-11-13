@@ -202,8 +202,6 @@ class Database
 	}
 	public function UpdateNetTimeToResolution($ticket)
 	{
-		$debug_ticket = 'SIEJIR-5531'; 
-			
 		$ticket->net_minutes_to_resolution = 0;
 		$ticket->net_time_to_resolution = '';
 		if($ticket->test_case_provided_date != null)
@@ -220,11 +218,14 @@ class Database
 			
 			$test_case_provided_date = new \DateTime($ticket->test_case_provided_date);
 			$ticket->net_minutes_to_resolution = JiraTicket::get_working_minutes($test_case_provided_date,$finish);
-			//echo $ticket->key."\n";
-			///echo $ticket->net_minutes_to_resolution."\n";
+			
+			//echo $ticket->net_minutes_to_resolution."\n";
 			//echo $ticket->waitminutes."\n";
-			if(isset($ticket->debug))
+			//echo $ticket->debug."\n";
+			if(0)//$ticket->key == 'SIEJIR-5790')
 			{
+				echo $ticket->key."\n";
+				echo "Test case provided date".$ticket->test_case_provided_date."\r\n";
 				echo "Solution provided date".$ticket->solution_provided_date."\r\n";
 				echo "Computed net minutes ".$ticket->net_minutes_to_resolution."\r\n";
 				echo "Waiting minutes ".$ticket->waitminutes."\r\n";
@@ -332,7 +333,7 @@ class Database
 	
 	function SaveTicket($ticket,$fromdb=0)
 	{
-		//echo "Saving ".$ticket->key."\n";
+		//echo "Saving ".$ticket->key." from db ".$fromdb."\n";
 		$query=['key'=>$ticket->key];
 		$options=['upsert'=>true];
 		
